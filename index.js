@@ -30,6 +30,16 @@ const LEFTWING = "<:LEFTWING:1508078152935669911>";
 const VERIFIED = "<:VERIFIED:1508075987227906138>";
 const BGL = "<:BGL:1508256826385502228>";
 
+// ===== FORMAT DL → BGL =====
+function formatCurrency(dlAmount) {
+  const bgl = Math.floor(dlAmount / 100);
+  const dl = dlAmount % 100;
+
+  if (bgl > 0 && dl > 0) return `${bgl}${BGL} ${dl}${DL}`;
+  if (bgl > 0) return `${bgl}${BGL}`;
+  return `${dl}${DL}`;
+}
+
 // ===== XP TABLE =====
 const totalXP = {
   1:100,2:250,3:550,4:1100,5:2000,6:3350,7:5250,8:7800,9:11100,10:15250,
@@ -110,43 +120,43 @@ client.on("interactionCreate", async (interaction) => {
     const pack1XP = base + coconut + dragon;
     const pack23XP = (base + coconut + dragon) * 1.2;
 
-    // ===== PACK (SUDAH BGL) =====
+    // ===== PACK =====
     const results = [
 
       (() => {
         const ghosts = Math.floor(129000 / pack1XP);
         const total = ghosts * pack1XP;
         const amount = Math.ceil(neededXP / total);
-        return { name: "Pack 1", amount, cost: ((amount * 20) / 100).toFixed(2) };
+        return { name: "Pack 1", amount, cost: amount * 20 };
       })(),
 
       (() => {
         const ghosts = Math.floor(619200 / pack23XP);
         const total = ghosts * pack23XP;
         const amount = Math.ceil(neededXP / total);
-        return { name: "Pack 2", amount, cost: ((amount * 40) / 100).toFixed(2) };
+        return { name: "Pack 2", amount, cost: amount * 40 };
       })(),
 
       (() => {
         const ghosts = Math.floor(1238400 / pack23XP);
         const total = ghosts * pack23XP;
         const amount = Math.ceil(neededXP / total);
-        return { name: "Pack 3", amount, cost: ((amount * 75) / 100).toFixed(2) };
+        return { name: "Pack 3", amount, cost: amount * 75 };
       })()
 
     ];
 
-    const best = results.reduce((a, b) => parseFloat(a.cost) < parseFloat(b.cost) ? a : b);
+    const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
 
     const embed = new EmbedBuilder()
       .setTitle(`${LEFTWING} Need Level? Go WOWLVL ${RIGHTWING}`)
       .addFields(
         { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
         { name: "Total XP", value: neededXP.toLocaleString() },
-        { name: `Pack ${PACK_1}`, value: `${results[0].amount}x (${results[0].cost} ${BGL})` },
-        { name: `Pack ${PACK_2}`, value: `${results[1].amount}x (${results[1].cost} ${BGL})` },
-        { name: `Pack ${PACK_3}`, value: `${results[2].amount}x (${results[2].cost} ${BGL})` },
-        { name: `Best Pack ${VERIFIED}`, value: `${best.name} (${best.cost} ${BGL})` }
+        { name: `Pack ${PACK_1}`, value: `${results[0].amount}x (${formatCurrency(results[0].cost)})` },
+        { name: `Pack ${PACK_2}`, value: `${results[1].amount}x (${formatCurrency(results[1].cost)})` },
+        { name: `Pack ${PACK_3}`, value: `${results[2].amount}x (${formatCurrency(results[2].cost)})` },
+        { name: `Best Pack ${VERIFIED}`, value: `${best.name} (${formatCurrency(best.cost)})` }
       );
 
     await interaction.reply({ embeds: [embed] });
