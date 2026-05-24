@@ -22,33 +22,6 @@ const client = new Client({
 // ===== EMOJI =====
 const DL = "<:DL:1508030377397190706>";
 
-// ===== STICKY =====
-let lastStickyMessageId = null;
-const IMAGE_URL = "https://cdn.discordapp.com/attachments/1507770268611903548/1507770550469005483/Transparent_Background.png";
-
-client.on("messageCreate", async (message) => {
-  if (message.author.bot) return;
-
-  try {
-    if (lastStickyMessageId) {
-      try {
-        const oldMsg = await message.channel.messages.fetch(lastStickyMessageId);
-        if (oldMsg) await oldMsg.delete();
-      } catch {}
-    }
-
-    const newMsg = await message.channel.send({
-      content: "Need Level? Go **WOWLVL** 👻",
-      files: [IMAGE_URL]
-    });
-
-    lastStickyMessageId = newMsg.id;
-
-  } catch (err) {
-    console.log(err);
-  }
-});
-
 // ===== XP TABLE =====
 const totalXP = {
   1:100,2:250,3:550,4:1100,5:2000,6:3350,7:5250,8:7800,9:11100,10:15250,
