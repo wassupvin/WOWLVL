@@ -25,26 +25,26 @@ let userData = {};
 
 const IMAGE_URL = "https://cdn.discordapp.com/attachments/1507770268611903548/1507770550469005483/Transparent_Background.png";
 
-// ===== RUMUS XP BARU =====
+// ===== XP FUNCTION =====
 function getXPBetween(start, target) {
   let total = 0;
-
   for (let lvl = start; lvl < target; lvl++) {
     const xp = Math.floor(50 + (10 * lvl * lvl) + (0.5 * lvl * lvl * lvl));
     total += xp;
   }
-
   return total;
 }
 
-// ===== STICKY =====
+// ===== STICKY (ANTI ERROR) =====
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
   try {
     if (lastStickyMessageId) {
-      const oldMsg = await message.channel.messages.fetch(lastStickyMessageId);
-      if (oldMsg) await oldMsg.delete();
+      try {
+        const oldMsg = await message.channel.messages.fetch(lastStickyMessageId);
+        if (oldMsg) await oldMsg.delete();
+      } catch {}
     }
 
     const newMsg = await message.channel.send({
@@ -53,8 +53,9 @@ client.on("messageCreate", async (message) => {
     });
 
     lastStickyMessageId = newMsg.id;
+
   } catch (err) {
-    console.log(err);
+    console.log("Sticky Error:", err.message);
   }
 });
 
@@ -68,16 +69,21 @@ const commands = [
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
 (async () => {
-  await rest.put(
-    Routes.applicationGuildCommands("YOUR_CLIENT_ID", "YOUR_GUILD_ID"),
-    { body: commands }
-  );
+  try {
+    await rest.put(
+      Routes.applicationGuildCommands("CLIENT_ID_KAMU", "GUILD_ID_KAMU"),
+      { body: commands }
+    );
+    console.log("Slash command registered");
+  } catch (err) {
+    console.log(err);
+  }
 })();
 
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
 
-  // STEP 1
+  // STEP 1 - OPEN FORM
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === "calculator") {
 
@@ -110,38 +116,27 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  // STEP 2
+  // STEP 2 - SAVE INPUT
   if (interaction.isModalSubmit()) {
     if (interaction.customId === "calcModal") {
 
-      userData[interaction.user.id] = {
-        currentLevel: parseInt(interaction.fields.getTextInputValue("currentLevel")),
-        targetLevel: parseInt(interaction.fields.getTextInputValue("targetLevel")),
-        currentXP: parseInt(interaction.fields.getTextInputValue("currentXP"))
-      };
+      const start = parseInt(interaction.fields.getTextInputValue("currentLevel"));
+      const target = parseInt(interaction.fields.getTextInputValue("targetLevel"));
+      const currentXP = parseInt(interaction.fields.getTextInputValue("currentXP"));
 
-      const menu = new StringSelectMenuBuilder()
-        .setCustomId("mode")
-        .setPlaceholder("Pilih metode")
-        .addOptions([
-          { label: "Ghost Catching", value: "ghost" }
-        ]);
+      if (isNaN(start) || isNaN(target) || isNaN(currentXP)) {
+        return interaction.reply({ content: "❌ Semua input harus angka!", ephemeral: true });
+      }
 
-      await interaction.reply({
-        content: "Pilih metode:",
-        components: [new ActionRowBuilder().addComponents(menu)]
-      });
-    }
-  }
+      if (target <= start) {
+        return interaction.reply({ content: "❌ Level tujuan harus lebih besar!", ephemeral: true });
+      }
 
-  // STEP 3 & 4
-  if (interaction.isStringSelectMenu()) {
-
-    if (interaction.customId === "mode") {
+      userData[interaction.user.id] = { start, target, currentXP };
 
       const menu = new StringSelectMenuBuilder()
         .setCustomId("buff")
-        .setPlaceholder("XP Boost")
+        .setPlaceholder("Pilih XP Boost")
         .addOptions([
           { label: "No Buff", value: "none" },
           { label: "Ancestral Totem (+5%)", value: "totem" },
@@ -150,19 +145,24 @@ client.on("interactionCreate", async (interaction) => {
           { label: "Ghost Dragon Charm (+200 XP/ghost)", value: "dragon" }
         ]);
 
-      await interaction.update({
+      await interaction.reply({
         content: "Pilih XP Boost:",
         components: [new ActionRowBuilder().addComponents(menu)]
       });
     }
+  }
+
+  // STEP 3 - CALCULATE
+  if (interaction.isStringSelectMenu()) {
 
     if (interaction.customId === "buff") {
 
       const data = userData[interaction.user.id];
+      if (!data) {
+        return interaction.update({ content: "❌ Data tidak ditemukan", components: [] });
+      }
 
-      const start = data.currentLevel;
-      const target = data.targetLevel;
-      const currentXP = data.currentXP;
+      const { start, target, currentXP } = data;
       const buffType = interaction.values[0];
 
       let neededXP = getXPBetween(start, target) - currentXP;
