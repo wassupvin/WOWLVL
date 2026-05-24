@@ -133,14 +133,16 @@ client.on("interactionCreate", async (interaction) => {
     const embed = new EmbedBuilder()
       .setTitle("💰 Pack Recommendation")
       .addFields(
-        { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` }
-        { name: "Total XP", value: neededXP.toLocaleString() },
-        { name: "▶️ **Pack 1**", value: `${results[0].amount}x (${results[0].cost} ${DL})` },
-        { name: "▶️ **Pack 2**", value: `${results[1].amount}x (${results[1].cost} ${DL})` },
-        { name: "▶️ **Pack 3**", value: `${results[2].amount}x (${results[2].cost} ${DL})` },
-        { name: "**Best Pack** ✅", value: `${best.name} (${best.cost} ${DL})` }
-      );
-
+const embed = new EmbedBuilder()
+  .setTitle("💰 Pack Recommendation")
+  .addFields(
+    { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
+    { name: "Total XP", value: neededXP.toLocaleString() },
+    { name: "▶️ **Pack 1**", value: `${results[0].amount}x (${results[0].cost} ${DL})` },
+    { name: "▶️ **Pack 2**", value: `${results[1].amount}x (${results[1].cost} ${DL})` },
+    { name: "▶️ **Pack 3**", value: `${results[2].amount}x (${results[2].cost} ${DL})` },
+    { name: "**Best Pack** ✅", value: `${best.name} (${best.cost} ${DL})` }
+  );
     await interaction.reply({ embeds: [embed] });
   }
 
