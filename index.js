@@ -140,19 +140,19 @@ client.on("interactionCreate", async (interaction) => {
         { name: "XP Needed", value: neededXP.toLocaleString() },
         {
           name: "Pack 1",
-          value: `${results[0].amount}x (${results[0].cost} :dl:)`
+          value: `${results[0].amount}x (${results[0].cost} :dl: )`
         },
         {
           name: "Pack 2",
-          value: `${results[1].amount}x (${results[1].cost} :dl:)`
+          value: `${results[1].amount}x (${results[1].cost} :dl: )`
         },
         {
           name: "Pack 3",
-          value: `${results[2].amount}x (${results[2].cost} :dl:)`
+          value: `${results[2].amount}x (${results[2].cost} :dl: )`
         },
         {
           name: "✅ Best Choice",
-          value: `${best.name} (${best.cost} :dl:)`
+          value: `${best.name} (${best.cost} :dl: )`
         }
       );
 
