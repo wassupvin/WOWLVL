@@ -20,7 +20,7 @@ const client = new Client({
 });
 
 // ===== EMOJI DL =====
-const DL = "<:DL:1508044664702500894>";
+const DL = "<:DL:>";
 
 // ===== STICKY =====
 let lastStickyMessageId = null;
