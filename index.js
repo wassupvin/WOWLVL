@@ -120,7 +120,7 @@ client.on("interactionCreate", async (interaction) => {
     if (neededXP > 0) neededXP += 1;
     if (neededXP < 0) neededXP = 0;
 
-    // ===== BUFF SYSTEM =====
+    // ===== BUFF =====
     const base = 8;
     const coconut = 50;
     const dragon = 200;
@@ -128,7 +128,7 @@ client.on("interactionCreate", async (interaction) => {
     const pack1XP = base + coconut + dragon; // 258
     const pack23XP = (base + coconut + dragon) * 1.2; // 309.6
 
-    // ===== PACK CALC =====
+    // ===== PACK =====
     const results = [
 
       (() => {
