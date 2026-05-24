@@ -23,19 +23,23 @@ const client = new Client({
 let lastStickyMessageId = null;
 let userData = {};
 
-const IMAGE_URL = "https://cdn.discordapp.com/attachments/1507770268611903548/1507940635619889315/Transparent_Background.png?ex=6a13baa7&is=6a126927&hm=a34b7b16945c8e5d2b4926ff459aa1dea34bc5a35ffd5e64bf61259b376e9355&";
+const IMAGE_URL = "https://cdn.discordapp.com/attachments/1507770268611903548/1507770550469005483/Transparent_Background.png";
 
-// ===== XP FUNCTION =====
+// ===== XP PER BLOCK (RUMUS RESMI) =====
+function getXPPerBlock(rarity) {
+  return 1 + Math.floor(rarity / 5);
+}
+
+// ===== XP LEVEL =====
 function getXPBetween(start, target) {
   let total = 0;
   for (let lvl = start; lvl < target; lvl++) {
-    const xp = Math.floor(50 + (10 * lvl * lvl) + (0.5 * lvl * lvl * lvl));
-    total += xp;
+    total += Math.floor(50 + (10 * lvl * lvl) + (0.5 * lvl * lvl * lvl));
   }
   return total;
 }
 
-// ===== STICKY (ANTI ERROR) =====
+// ===== STICKY MESSAGE =====
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
@@ -48,7 +52,7 @@ client.on("messageCreate", async (message) => {
     }
 
     const newMsg = await message.channel.send({
-      content: "Need Level? Go **WOWLVL**",
+      content: "Need Level? Go **WOWLVL** 👻",
       files: [IMAGE_URL]
     });
 
@@ -63,7 +67,7 @@ client.on("messageCreate", async (message) => {
 const commands = [
   new SlashCommandBuilder()
     .setName("calculator")
-    .setDescription("XP Calculator")
+    .setDescription("Growtopia XP Calculator")
 ];
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
@@ -71,10 +75,10 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 (async () => {
   try {
     await rest.put(
-      Routes.applicationGuildCommands("1507572125202911344", "1502085438674833558"),
+      Routes.applicationGuildCommands("CLIENT_ID_KAMU", "GUILD_ID_KAMU"),
       { body: commands }
     );
-    console.log("Slash command registered");
+    console.log("Command ready");
   } catch (err) {
     console.log(err);
   }
@@ -83,7 +87,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
 
-  // STEP 1 - OPEN FORM
+  // STEP 1: OPEN FORM
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === "calculator") {
 
@@ -91,121 +95,79 @@ client.on("interactionCreate", async (interaction) => {
         .setCustomId("calcModal")
         .setTitle("XP Calculator");
 
-      const input1 = new TextInputBuilder()
-        .setCustomId("currentLevel")
+      const lvlNow = new TextInputBuilder()
+        .setCustomId("lvlNow")
         .setLabel("Level sekarang")
         .setStyle(TextInputStyle.Short);
 
-      const input2 = new TextInputBuilder()
-        .setCustomId("targetLevel")
+      const lvlTarget = new TextInputBuilder()
+        .setCustomId("lvlTarget")
         .setLabel("Level tujuan")
         .setStyle(TextInputStyle.Short);
 
-      const input3 = new TextInputBuilder()
-        .setCustomId("currentXP")
+      const xpNow = new TextInputBuilder()
+        .setCustomId("xpNow")
         .setLabel("XP sekarang")
         .setStyle(TextInputStyle.Short);
 
       modal.addComponents(
-        new ActionRowBuilder().addComponents(input1),
-        new ActionRowBuilder().addComponents(input2),
-        new ActionRowBuilder().addComponents(input3)
+        new ActionRowBuilder().addComponents(lvlNow),
+        new ActionRowBuilder().addComponents(lvlTarget),
+        new ActionRowBuilder().addComponents(xpNow)
       );
 
       await interaction.showModal(modal);
     }
   }
 
-  // STEP 2 - SAVE INPUT
+  // STEP 2: INPUT
   if (interaction.isModalSubmit()) {
-    if (interaction.customId === "calcModal") {
 
-      const start = parseInt(interaction.fields.getTextInputValue("currentLevel"));
-      const target = parseInt(interaction.fields.getTextInputValue("targetLevel"));
-      const currentXP = parseInt(interaction.fields.getTextInputValue("currentXP"));
+    const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
+    const target = parseInt(interaction.fields.getTextInputValue("lvlTarget"));
+    const currentXP = parseInt(interaction.fields.getTextInputValue("xpNow"));
 
-      if (isNaN(start) || isNaN(target) || isNaN(currentXP)) {
-        return interaction.reply({ content: "❌ Semua input harus angka!", ephemeral: true });
-      }
-
-      if (target <= start) {
-        return interaction.reply({ content: "❌ Level tujuan harus lebih besar!", ephemeral: true });
-      }
-
-      userData[interaction.user.id] = { start, target, currentXP };
-
-      const menu = new StringSelectMenuBuilder()
-        .setCustomId("buff")
-        .setPlaceholder("Pilih XP Boost")
-        .addOptions([
-          { label: "No Buff", value: "none" },
-          { label: "Ancestral Totem (+5%)", value: "totem" },
-          { label: "Ring of Wisdom (+10%)", value: "ring" },
-          { label: "Gingerbread Cookie (Triple XP)", value: "cookie" },
-          { label: "Ghost Dragon Charm (+200 XP/ghost)", value: "dragon" }
-        ]);
-
-      await interaction.reply({
-        content: "Pilih XP Boost:",
-        components: [new ActionRowBuilder().addComponents(menu)]
-      });
+    if (isNaN(start) || isNaN(target) || isNaN(currentXP)) {
+      return interaction.reply({ content: "❌ Input harus angka!", ephemeral: true });
     }
+
+    if (target <= start) {
+      return interaction.reply({ content: "❌ Level tujuan harus lebih besar!", ephemeral: true });
+    }
+
+    userData[interaction.user.id] = { start, target, currentXP };
+
+    const menu = new StringSelectMenuBuilder()
+      .setCustomId("method")
+      .setPlaceholder("Pilih metode")
+      .addOptions([
+        { label: "Ghost Catching", value: "ghost" }
+      ]);
+
+    await interaction.reply({
+      content: "Pilih metode:",
+      components: [new ActionRowBuilder().addComponents(menu)]
+    });
   }
 
-  // STEP 3 - CALCULATE
+  // STEP 3: METHOD
   if (interaction.isStringSelectMenu()) {
 
-    if (interaction.customId === "buff") {
+    if (interaction.customId === "method") {
 
       const data = userData[interaction.user.id];
-      if (!data) {
-        return interaction.update({ content: "❌ Data tidak ditemukan", components: [] });
-      }
 
-      const { start, target, currentXP } = data;
-      const buffType = interaction.values[0];
-
-      let neededXP = getXPBetween(start, target) - currentXP;
-      if (neededXP < 0) neededXP = 0;
-
-      let finalXP = neededXP;
-      let info = "";
-
-      if (buffType === "totem") {
-        finalXP = Math.floor(neededXP / 1.05);
-        info = "+5% XP";
-      }
-
-      if (buffType === "ring") {
-        finalXP = Math.floor(neededXP / 1.10);
-        info = "+10% XP";
-      }
-
-      if (buffType === "cookie") {
-        finalXP = Math.floor(neededXP / 3);
-        info = "Triple XP";
-      }
-
-      if (buffType === "dragon") {
-        const xpPerGhost = 300;
-        finalXP = Math.ceil(neededXP / xpPerGhost);
-        info = "+200 XP per ghost";
-      }
-
-      if (buffType === "none") {
-        info = "No Buff";
-      }
+      const xpNeeded = getXPBetween(data.start, data.target) - data.currentXP;
+      const ghostXP = getXPPerBlock(38); // ghost jar rarity 38
+      const ghostNeeded = Math.ceil(xpNeeded / ghostXP);
 
       const embed = new EmbedBuilder()
-        .setTitle("📊 Hasil Calculator")
+        .setTitle("👻 Ghost Calculator")
         .addFields(
-          { name: "Level", value: `${start} → ${target}` },
-          { name: "XP Dibutuhkan", value: neededXP.toLocaleString() },
-          { name: "Buff", value: info },
-          {
-            name: buffType === "dragon" ? "Ghost Needed" : "Final XP",
-            value: finalXP.toLocaleString()
-          }
+          { name: "Level", value: `${data.start} → ${data.target}` },
+          { name: "XP Needed", value: xpNeeded.toLocaleString() },
+          { name: "XP per Ghost", value: ghostXP.toString() },
+          { name: "Ghost Needed", value: ghostNeeded.toLocaleString() }
         );
 
       await interaction.update({
