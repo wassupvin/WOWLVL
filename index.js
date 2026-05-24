@@ -132,21 +132,21 @@ client.on("interactionCreate", async (interaction) => {
     const results = [
 
       (() => {
-        const ghosts = Math.floor(125000 / pack1XP);
+        const ghosts = Math.floor(129000 / pack1XP);
         const total = ghosts * pack1XP;
         const amount = Math.ceil(neededXP / total);
         return { name: "Pack 1", amount, cost: amount * 20 };
       })(),
 
       (() => {
-        const ghosts = Math.floor(500000 / pack23XP);
+        const ghosts = Math.floor(619200 / pack23XP);
         const total = ghosts * pack23XP;
         const amount = Math.ceil(neededXP / total);
         return { name: "Pack 2", amount, cost: amount * 40 };
       })(),
 
       (() => {
-        const ghosts = Math.floor(1000000 / pack23XP);
+        const ghosts = Math.floor(1238400 / pack23XP);
         const total = ghosts * pack23XP;
         const amount = Math.ceil(neededXP / total);
         return { name: "Pack 3", amount, cost: amount * 75 };
