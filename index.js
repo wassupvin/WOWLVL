@@ -62,21 +62,19 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
   );
 })();
 
-// ===== FUNCTION XP =====
+// ===== XP FUNCTION =====
 function calculateXP(start, target) {
   let total = 0;
-
   for (let lvl = start; lvl < target; lvl++) {
     total += 50 + (lvl * lvl * 10);
   }
-
   return total;
 }
 
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
 
-  // STEP 1 - OPEN FORM
+  // STEP 1 - FORM
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === "calculator") {
 
@@ -133,17 +131,21 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  // STEP 3 - PILIH MODE
+  // STEP 3 + 4
   if (interaction.isStringSelectMenu()) {
 
+    // PILIH MODE
     if (interaction.customId === "mode") {
+
       const menu = new StringSelectMenuBuilder()
         .setCustomId("buff")
         .setPlaceholder("XP Boost")
         .addOptions([
-          { label: "No Buff", value: "0" },
-          { label: "5%", value: "5" },
-          { label: "10%", value: "10" }
+          { label: "No Buff", value: "none" },
+          { label: "Ancestral Totem (+5%)", value: "totem" },
+          { label: "Ring of Wisdom (+10%)", value: "ring" },
+          { label: "Gingerbread Cookie (Triple XP)", value: "cookie" },
+          { label: "Ghost Dragon Charm (+200 XP/ghost)", value: "dragon" }
         ]);
 
       await interaction.update({
@@ -152,7 +154,7 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-    // STEP 4 - HITUNG
+    // HITUNG
     if (interaction.customId === "buff") {
 
       const data = userData[interaction.user.id];
@@ -160,18 +162,50 @@ client.on("interactionCreate", async (interaction) => {
       const start = parseInt(data.currentLevel);
       const target = parseInt(data.targetLevel);
       const currentXP = parseInt(data.currentXP);
-      const buff = parseInt(interaction.values[0]);
+      const buffType = interaction.values[0];
 
       let neededXP = calculateXP(start, target) - currentXP;
-      let finalXP = Math.floor(neededXP / (1 + buff / 100));
+
+      let finalXP = neededXP;
+      let info = "";
+
+      if (buffType === "totem") {
+        finalXP = Math.floor(neededXP / 1.05);
+        info = "+5% XP";
+      }
+
+      if (buffType === "ring") {
+        finalXP = Math.floor(neededXP / 1.10);
+        info = "+10% XP";
+      }
+
+      if (buffType === "cookie") {
+        finalXP = Math.floor(neededXP / 3);
+        info = "Triple XP";
+      }
+
+      if (buffType === "dragon") {
+        const xpPerGhost = 300; // 100 base + 200 bonus
+        const ghostsNeeded = Math.ceil(neededXP / xpPerGhost);
+
+        finalXP = ghostsNeeded;
+        info = "+200 XP per ghost";
+      }
+
+      if (buffType === "none") {
+        info = "No Buff";
+      }
 
       const embed = new EmbedBuilder()
         .setTitle("📊 Hasil Calculator")
         .addFields(
           { name: "Level", value: `${start} → ${target}` },
-          { name: "XP Awal", value: currentXP.toLocaleString() },
           { name: "XP Dibutuhkan", value: neededXP.toLocaleString() },
-          { name: "Setelah Buff", value: finalXP.toLocaleString() }
+          { name: "Buff", value: info },
+          {
+            name: buffType === "dragon" ? "Ghost Needed" : "Final XP",
+            value: finalXP.toLocaleString()
+          }
         );
 
       await interaction.update({
