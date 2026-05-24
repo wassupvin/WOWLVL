@@ -1,4 +1,13 @@
-const { Client, GatewayIntentBits } = require("discord.js");
+const {
+  Client,
+  GatewayIntentBits,
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  StringSelectMenuBuilder,
+  EmbedBuilder,
+  REST,
+  Routes
+} = require("discord.js");
 
 const client = new Client({
   intents: [
@@ -38,5 +47,65 @@ client.on("messageCreate", async (message) => {
     console.log("Error:", err.message);
   }
 });
+const commands = [
+  new SlashCommandBuilder()
+    .setName("calculator")
+    .setDescription("XP Calculator")
+];
 
+const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+
+(async () => {
+  await rest.put(
+    Routes.applicationGuildCommands("1507572125202911344", "1502085438674833558"),
+    { body: commands }
+  );
+})();
 client.login(process.env.TOKEN);
+client.on("interactionCreate", async (interaction) => {
+
+  if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === "calculator") {
+
+      const embed = new EmbedBuilder()
+        .setTitle("⭐ Calculator")
+        .setDescription("Pilih menu di bawah")
+        .setColor(0x00ffcc);
+
+      const menu = new StringSelectMenuBuilder()
+        .setCustomId("menu")
+        .setPlaceholder("Pilih fitur")
+        .addOptions([
+          { label: "Ghost Catching", value: "ghost" },
+          { label: "XP Buff", value: "buff" }
+        ]);
+
+      const row = new ActionRowBuilder().addComponents(menu);
+
+      await interaction.reply({
+        embeds: [embed],
+        components: [row]
+      });
+    }
+  }
+
+  if (interaction.isStringSelectMenu()) {
+
+    if (interaction.values[0] === "ghost") {
+      await interaction.update({
+        content: "👻 Ghost dipilih!",
+        embeds: [],
+        components: []
+      });
+    }
+
+    if (interaction.values[0] === "buff") {
+      await interaction.update({
+        content: "⚡ Buff dipilih!",
+        embeds: [],
+        components: []
+      });
+    }
+  }
+
+});
