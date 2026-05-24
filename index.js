@@ -133,7 +133,7 @@ client.on("interactionCreate", async (interaction) => {
     const embed = new EmbedBuilder()
       .setTitle("💰 Pack Recommendation")
       .addFields(
-        { name: ":YELLOWSTAR: Level", value: `${start} → ${target}` },
+        { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` }
         { name: "Total XP", value: neededXP.toLocaleString() },
         { name: "▶️ **Pack 1**", value: `${results[0].amount}x (${results[0].cost} ${DL})` },
         { name: "▶️ **Pack 2**", value: `${results[1].amount}x (${results[1].cost} ${DL})` },
