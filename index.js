@@ -23,7 +23,7 @@ const client = new Client({
 let lastStickyMessageId = null;
 let userData = {};
 
-const IMAGE_URL = "https://cdn.discordapp.com/attachments/1507770268611903548/1507770550469005483/Transparent_Background.png";
+const IMAGE_URL = "https://cdn.discordapp.com/attachments/1507770268611903548/1507940635619889315/Transparent_Background.png?ex=6a13baa7&is=6a126927&hm=a34b7b16945c8e5d2b4926ff459aa1dea34bc5a35ffd5e64bf61259b376e9355&";
 
 // ===== XP FUNCTION =====
 function getXPBetween(start, target) {
