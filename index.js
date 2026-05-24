@@ -22,6 +22,11 @@ const client = new Client({
 // ===== EMOJI =====
 const DL = "<:DL:1508062516067045478>";
 const YELLOWSTAR = "<:YELLOWSTAR:1508062626284961872>";
+const PACK_1 = "<:PACK_1:1508070148605476934>";
+const PACK_2 = "<:PACK_2:1508070224845603026>";
+const PACK_3 = "<:PACK_3:1508070301655760967>";
+const RIGHTWING = "<:RIGHTWING:1508072223959945368>";
+const LEFTWING = "<:LEFTWING:1508072131806892102>";
 
 // ===== XP TABLE =====
 const totalXP = {
@@ -133,13 +138,13 @@ client.on("interactionCreate", async (interaction) => {
     const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
 
     const embed = new EmbedBuilder()
-      .setTitle("💰 Pack Recommendation")
+      .setTitle(<:LEFTWING:1508072131806892102> "Need Level? Go WOWLVL <:RIGHTWING:1508072223959945368> ")
       .addFields(
         { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
         { name: "Total XP", value: neededXP.toLocaleString() },
-        { name: "▶️ Pack 1", value: `${results[0].amount}x (${results[0].cost} ${DL})` },
-        { name: "▶️ Pack 2", value: `${results[1].amount}x (${results[1].cost} ${DL})` },
-        { name: "▶️ Pack 3", value: `${results[2].amount}x (${results[2].cost} ${DL})` },
+        { name: "Pack <:PACK_1:1508070148605476934>", value: `${results[0].amount}x (${results[0].cost} ${DL})` },
+        { name: "Pack <:PACK_2:1508070224845603026>", value: `${results[1].amount}x (${results[1].cost} ${DL})` },
+        { name: "Pack <:PACK_3:1508070301655760967>", value: `${results[2].amount}x (${results[2].cost} ${DL})` },
         { name: "✅ Best Pack", value: `${best.name} (${best.cost} ${DL})` }
       );
 
