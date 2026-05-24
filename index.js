@@ -64,8 +64,8 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
 
-  // OPEN MODAL
   if (interaction.isChatInputCommand()) {
+
     const modal = new ModalBuilder()
       .setCustomId("calc")
       .setTitle("XP Calculator");
@@ -85,7 +85,6 @@ client.on("interactionCreate", async (interaction) => {
     await interaction.showModal(modal);
   }
 
-  // SUBMIT MODAL
   if (interaction.isModalSubmit()) {
 
     const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
@@ -138,13 +137,13 @@ client.on("interactionCreate", async (interaction) => {
     const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
 
     const embed = new EmbedBuilder()
-      .setTitle(<:LEFTWING:1508072131806892102> "Need Level? Go WOWLVL <:RIGHTWING:1508072223959945368> ")
+      .setTitle(`${LEFTWING} Need Level? Go WOWLVL ${RIGHTWING}`)
       .addFields(
         { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
         { name: "Total XP", value: neededXP.toLocaleString() },
-        { name: "Pack <:PACK_1:1508070148605476934>", value: `${results[0].amount}x (${results[0].cost} ${DL})` },
-        { name: "Pack <:PACK_2:1508070224845603026>", value: `${results[1].amount}x (${results[1].cost} ${DL})` },
-        { name: "Pack <:PACK_3:1508070301655760967>", value: `${results[2].amount}x (${results[2].cost} ${DL})` },
+        { name: `${PACK_1} Pack 1`, value: `${results[0].amount}x (${results[0].cost} ${DL})` },
+        { name: `${PACK_2} Pack 2`, value: `${results[1].amount}x (${results[1].cost} ${DL})` },
+        { name: `${PACK_3} Pack 3`, value: `${results[2].amount}x (${results[2].cost} ${DL})` },
         { name: "✅ Best Pack", value: `${best.name} (${best.cost} ${DL})` }
       );
 
