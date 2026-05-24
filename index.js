@@ -110,13 +110,13 @@ client.on("interactionCreate", async (interaction) => {
 
     modal.addComponents(
       new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId("lvlNow").setLabel("Level sekarang").setStyle(TextInputStyle.Short)
+        new TextInputBuilder().setCustomId("lvlNow").setLabel("Level Now").setStyle(TextInputStyle.Short)
       ),
       new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId("lvlTarget").setLabel("Level tujuan").setStyle(TextInputStyle.Short)
+        new TextInputBuilder().setCustomId("lvlTarget").setLabel("Goal Level").setStyle(TextInputStyle.Short)
       ),
       new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId("xpNow").setLabel("XP sekarang").setStyle(TextInputStyle.Short)
+        new TextInputBuilder().setCustomId("xpNow").setLabel("XP Level Now").setStyle(TextInputStyle.Short)
       )
     );
 
