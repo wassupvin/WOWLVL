@@ -139,22 +139,18 @@ client.on("interactionCreate", async (interaction) => {
         { name: "Level", value: `${start} → ${target}` },
         { name: "XP Needed", value: neededXP.toLocaleString() },
         {
-          name: "Pack 1",
-          value: `${results[0].amount}x (${results[0].cost} <:dl:1508031897534599318> )`
-        },
-        {
-          name: "Pack 2",
-          value: `${results[1].amount}x (${results[1].cost} <:dl:1508031897534599318> )`
-        },
-        {
-          name: "Pack 3",
-          value: `${results[2].amount}x (${results[2].cost} <:dl:1508031897534599318> )`
-        },
-        {
-          name: "✅ Recomended Pack",
-          value: `${best.name} (${best.cost} <:dl:1508031897534599318> )`
-        }
-      );
+const embed = new EmbedBuilder()
+  .setTitle("💰 Pack Recommendation")
+  .addFields(
+    { name: "Level", value: `${start} → ${target}` },
+    { name: "XP Needed", value: neededXP.toLocaleString() },
+
+    { name: "Pack 1", value: `${pack1Count}x (20 ${DL})` },
+    { name: "Pack 2", value: `${pack2Count}x (40 ${DL})` },
+    { name: "Pack 3", value: `${pack3Count}x (75 ${DL})` },
+
+    { name: "✅ Recommended Pack", value: `${recommended}` }
+  );
 
     await interaction.reply({ embeds: [embed] });
   }
