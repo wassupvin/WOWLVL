@@ -130,9 +130,6 @@ client.on("interactionCreate", async (interaction) => {
 
     const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
 
-    const embed = new EmbedBuilder()
-      .setTitle("💰 Pack Recommendation")
-      .addFields(
 const embed = new EmbedBuilder()
   .setTitle("💰 Pack Recommendation")
   .addFields(
@@ -143,8 +140,6 @@ const embed = new EmbedBuilder()
     { name: "▶️ **Pack 3**", value: `${results[2].amount}x (${results[2].cost} ${DL})` },
     { name: "**Best Pack** ✅", value: `${best.name} (${best.cost} ${DL})` }
   );
-    await interaction.reply({ embeds: [embed] });
-  }
 
 });
 
