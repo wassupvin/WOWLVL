@@ -59,6 +59,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
 
+  // OPEN MODAL
   if (interaction.isChatInputCommand()) {
     const modal = new ModalBuilder()
       .setCustomId("calc")
@@ -79,6 +80,7 @@ client.on("interactionCreate", async (interaction) => {
     await interaction.showModal(modal);
   }
 
+  // SUBMIT MODAL
   if (interaction.isModalSubmit()) {
 
     const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
@@ -99,8 +101,8 @@ client.on("interactionCreate", async (interaction) => {
     const coconut = 50;
     const dragon = 200;
 
-    const pack1XP = base + coconut + dragon; // 258
-    const pack23XP = (base + coconut + dragon) * 1.2; // 309.6
+    const pack1XP = base + coconut + dragon;
+    const pack23XP = (base + coconut + dragon) * 1.2;
 
     // ===== PACK =====
     const results = [
@@ -130,16 +132,19 @@ client.on("interactionCreate", async (interaction) => {
 
     const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
 
-const embed = new EmbedBuilder()
-  .setTitle("💰 Pack Recommendation")
-  .addFields(
-    { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
-    { name: "Total XP", value: neededXP.toLocaleString() },
-    { name: "▶️ **Pack 1**", value: `${results[0].amount}x (${results[0].cost} ${DL})` },
-    { name: "▶️ **Pack 2**", value: `${results[1].amount}x (${results[1].cost} ${DL})` },
-    { name: "▶️ **Pack 3**", value: `${results[2].amount}x (${results[2].cost} ${DL})` },
-    { name: "**Best Pack** ✅", value: `${best.name} (${best.cost} ${DL})` }
-  );
+    const embed = new EmbedBuilder()
+      .setTitle("💰 Pack Recommendation")
+      .addFields(
+        { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
+        { name: "Total XP", value: neededXP.toLocaleString() },
+        { name: "▶️ Pack 1", value: `${results[0].amount}x (${results[0].cost} ${DL})` },
+        { name: "▶️ Pack 2", value: `${results[1].amount}x (${results[1].cost} ${DL})` },
+        { name: "▶️ Pack 3", value: `${results[2].amount}x (${results[2].cost} ${DL})` },
+        { name: "✅ Best Pack", value: `${best.name} (${best.cost} ${DL})` }
+      );
+
+    await interaction.reply({ embeds: [embed] });
+  }
 
 });
 
