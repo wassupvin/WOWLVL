@@ -132,8 +132,12 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-    let neededXP = totalXP[target] - totalXP[start] - currentXP;
-    if (neededXP < 0) neededXP = 0;
+let neededXP = totalXP[target] - totalXP[start] - currentXP;
+
+// 🔥 FIX biar sama persis web (hindarin kurang 1)
+neededXP = Math.ceil(neededXP);
+
+if (neededXP < 0) neededXP = 0;
 
     // ===== PACK SYSTEM =====
     const packs = [
