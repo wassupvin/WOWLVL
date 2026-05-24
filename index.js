@@ -21,6 +21,7 @@ const client = new Client({
 
 // ===== EMOJI =====
 const DL = "<:DL:1508062516067045478>";
+const YELLOWSTAR = "<:YELLOWSTAR:1508062626284961872>";
 
 // ===== XP TABLE =====
 const totalXP = {
@@ -134,10 +135,10 @@ client.on("interactionCreate", async (interaction) => {
       .addFields(
         { name: ":YELLOWSTAR: Level", value: `${start} → ${target}` },
         { name: "Total XP", value: neededXP.toLocaleString() },
-        { name: "▶️ **Pack 1**", value: `${results[0].amount}x (${results[0].cost}${DL})` },
-        { name: "▶️ **Pack 2**", value: `${results[1].amount}x (${results[1].cost}${DL})` },
-        { name: "▶️ **Pack 3**", value: `${results[2].amount}x (${results[2].cost}${DL})` },
-        { name: "**Best Pack** ✅", value: `${best.name} (${best.cost}${DL})` }
+        { name: "▶️ **Pack 1**", value: `${results[0].amount}x (${results[0].cost} ${DL})` },
+        { name: "▶️ **Pack 2**", value: `${results[1].amount}x (${results[1].cost} ${DL})` },
+        { name: "▶️ **Pack 3**", value: `${results[2].amount}x (${results[2].cost} ${DL})` },
+        { name: "**Best Pack** ✅", value: `${best.name} (${best.cost} ${DL})` }
       );
 
     await interaction.reply({ embeds: [embed] });
