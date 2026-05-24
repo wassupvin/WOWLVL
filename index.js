@@ -140,19 +140,19 @@ client.on("interactionCreate", async (interaction) => {
         { name: "XP Needed", value: neededXP.toLocaleString() },
         {
           name: "Pack 1",
-          value: `${results[0].amount}x (${results[0].cost} DL)`
+          value: `${results[0].amount}x (${results[0].cost} https://cdn.discordapp.com/emojis/1508030377397190706.webp?size=240)`
         },
         {
           name: "Pack 2",
-          value: `${results[1].amount}x (${results[1].cost} DL)`
+          value: `${results[1].amount}x (${results[1].cost} https://cdn.discordapp.com/emojis/1508030377397190706.webp?size=240)`
         },
         {
           name: "Pack 3",
-          value: `${results[2].amount}x (${results[2].cost} DL)`
+          value: `${results[2].amount}x (${results[2].cost} https://cdn.discordapp.com/emojis/1508030377397190706.webp?size=240)`
         },
         {
           name: "✅ Best Choice",
-          value: `${best.name} (${best.cost} DL)`
+          value: `${best.name} (${best.cost} https://cdn.discordapp.com/emojis/1508030377397190706.webp?size=240)`
         }
       );
 
