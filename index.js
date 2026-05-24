@@ -50,7 +50,7 @@ client.on("messageCreate", async (message) => {
 });
 
 // ===== XP TABLE =====
-const totalXP = {
+const totalXP = { /* (tetap sama, ga diubah biar singkat) */ 
   1:100,2:250,3:550,4:1100,5:2000,6:3350,7:5250,8:7800,9:11100,10:15250,
   11:20350,12:26500,13:33800,14:42350,15:52250,16:63600,17:76500,18:91050,19:107350,20:125500,
   21:145600,22:167750,23:192050,24:218600,25:247500,26:278850,27:312750,28:349300,29:388600,30:430750,
@@ -85,40 +85,26 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
 
-  // OPEN MODAL
   if (interaction.isChatInputCommand()) {
-    if (interaction.commandName === "calculator") {
+    const modal = new ModalBuilder()
+      .setCustomId("calc")
+      .setTitle("XP Calculator");
 
-      const modal = new ModalBuilder()
-        .setCustomId("calc")
-        .setTitle("XP Calculator");
+    modal.addComponents(
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder().setCustomId("lvlNow").setLabel("Level sekarang").setStyle(TextInputStyle.Short)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder().setCustomId("lvlTarget").setLabel("Level tujuan").setStyle(TextInputStyle.Short)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder().setCustomId("xpNow").setLabel("XP sekarang").setStyle(TextInputStyle.Short)
+      )
+    );
 
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId("lvlNow")
-            .setLabel("Level sekarang")
-            .setStyle(TextInputStyle.Short)
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId("lvlTarget")
-            .setLabel("Level tujuan")
-            .setStyle(TextInputStyle.Short)
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId("xpNow")
-            .setLabel("XP sekarang")
-            .setStyle(TextInputStyle.Short)
-        )
-      );
-
-      await interaction.showModal(modal);
-    }
+    await interaction.showModal(modal);
   }
 
-  // SUBMIT MODAL
   if (interaction.isModalSubmit()) {
 
     const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
@@ -127,63 +113,77 @@ client.on("interactionCreate", async (interaction) => {
 
     if (!totalXP[start] || !totalXP[target] || start >= target) {
       return interaction.reply({
-        content: "❌ Level harus valid (1–125 & target > sekarang)",
+        content: "❌ Level harus valid",
         ephemeral: true
       });
     }
 
-let neededXP = (totalXP[target] - totalXP[start]) - currentXP;
+    // ===== XP CALC FIX =====
+    let neededXP = (totalXP[target] - totalXP[start]) - currentXP;
+    neededXP = Math.round(neededXP);
+    if (neededXP > 0) neededXP += 1;
+    if (neededXP < 0) neededXP = 0;
 
-// 🔥 pakai round + +1 biar exact kayak kalkulator lain
-neededXP = Math.round(neededXP + 0.00001);
+    // ===== BUFF SYSTEM =====
+    const ghostXP = 550;
+    const coconut = 50;
+    const perGhost = ghostXP + coconut; // 600
 
-// FIX tambahan (biar ga pernah kurang 1)
-if (neededXP > 0) neededXP += 1;
+    // ===== PACK CALC =====
+    const results = [
 
-if (neededXP < 0) neededXP = 0;
+      // PACK 1 (coconut only)
+      (() => {
+        const effectiveXP = perGhost;
+        const amount = Math.ceil(neededXP / effectiveXP);
+        return {
+          name: "Pack 1",
+          amount,
+          cost: amount * 20
+        };
+      })(),
 
-    // ===== PACK SYSTEM =====
-    const packs = [
-      { name: "Pack 1", xp: 125000, price: 20 },
-      { name: "Pack 2", xp: 500000, price: 40 },
-      { name: "Pack 3", xp: 1000000, price: 75 }
+      // PACK 2 (coconut + gingerbread)
+      (() => {
+        const effectiveXP = 500000 * 1.2;
+        const amount = Math.ceil(neededXP / effectiveXP);
+        return {
+          name: "Pack 2",
+          amount,
+          cost: amount * 40
+        };
+      })(),
+
+      // PACK 3 (coconut + gingerbread)
+      (() => {
+        const effectiveXP = 1000000 * 1.2;
+        const amount = Math.ceil(neededXP / effectiveXP);
+        return {
+          name: "Pack 3",
+          amount,
+          cost: amount * 75
+        };
+      })()
     ];
-
-    const results = packs.map(p => {
-      const amount = Math.ceil(neededXP / p.xp);
-      const cost = amount * p.price;
-      return { ...p, amount, cost };
-    });
 
     const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
 
-const embed = new EmbedBuilder()
-  .setTitle("💰 Pack Recommendation")
-  .addFields(
-    { name: "Level", value: `${start} → ${target}` },
-    { name: "XP Needed", value: neededXP.toLocaleString() },
+    const embed = new EmbedBuilder()
+      .setTitle("💰 Pack Recommendation")
+      .addFields(
+        { name: "Level", value: `${start} → ${target}` },
+        { name: "XP Needed", value: neededXP.toLocaleString() },
 
-    {
-      name: "Pack 1",
-      value: `${results[0].amount}x (${results[0].cost} ${DL})`
-    },
-    {
-      name: "Pack 2",
-      value: `${results[1].amount}x (${results[1].cost} ${DL})`
-    },
-    {
-      name: "Pack 3",
-      value: `${results[2].amount}x (${results[2].cost} ${DL})`
-    },
-    {
-      name: "✅ Best Choice",
-      value: `${best.name} (${best.cost} ${DL})`
-    }
-  );
+        { name: "Pack 1", value: `${results[0].amount}x (${results[0].cost}${DL})` },
+        { name: "Pack 2", value: `${results[1].amount}x (${results[1].cost}${DL})` },
+        { name: "Pack 3", value: `${results[2].amount}x (${results[2].cost}${DL})` },
+
+        { name: "✅ Best Choice", value: `${best.name} (${best.cost}${DL})` }
+      );
+
     await interaction.reply({ embeds: [embed] });
   }
 
 });
 
-// ===== LOGIN =====
 client.login(process.env.TOKEN);
