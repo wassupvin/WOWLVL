@@ -92,13 +92,13 @@ client.on("interactionCreate", async (interaction) => {
 
     modal.addComponents(
       new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId("lvlNow").setLabel("Level sekarang").setStyle(TextInputStyle.Short)
+        new TextInputBuilder().setCustomId("lvlNow").setLabel("Start Level").setStyle(TextInputStyle.Short)
       ),
       new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId("lvlTarget").setLabel("Level tujuan").setStyle(TextInputStyle.Short)
+        new TextInputBuilder().setCustomId("lvlTarget").setLabel("Target Level").setStyle(TextInputStyle.Short)
       ),
       new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId("xpNow").setLabel("XP sekarang").setStyle(TextInputStyle.Short)
+        new TextInputBuilder().setCustomId("xpNow").setLabel("Start XP").setStyle(TextInputStyle.Short)
       )
     );
 
@@ -164,7 +164,7 @@ client.on("interactionCreate", async (interaction) => {
         { name: "Pack 1", value: `${results[0].amount}x (${results[0].cost}${DL})` },
         { name: "Pack 2", value: `${results[1].amount}x (${results[1].cost}${DL})` },
         { name: "Pack 3", value: `${results[2].amount}x (${results[2].cost}${DL})` },
-        { name: "✅ Best Choice", value: `${best.name} (${best.cost}${DL})` }
+        { name: "✅ Best Pack", value: `${best.name} (${best.cost}${DL})` }
       );
 
     await interaction.reply({ embeds: [embed] });
