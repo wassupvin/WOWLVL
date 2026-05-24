@@ -157,30 +157,29 @@ if (neededXP < 0) neededXP = 0;
 
     const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
 
-    // ===== EMBED =====
-    const embed = new EmbedBuilder()
-      .setTitle("💰 Pack Recommendation")
-      .addFields(
-        { name: "Level", value: `${start} → ${target}` },
-        { name: "XP Needed", value: neededXP.toLocaleString() },
-        {
-          name: "Pack 1",
-          value: `${results[0].amount}x (${results[0].cost} ${DL} )`
-        },
-        {
-          name: "Pack 2",
-          value: `${results[1].amount}x (${results[1].cost} ${DL} )`
-        },
-        {
-          name: "Pack 3",
-          value: `${results[2].amount}x (${results[2].cost} ${DL} )`
-        },
-        {
-          name: "✅ Best Choice",
-          value: `${best.name} (${best.cost} ${DL} )`
-        }
-      );
+const embed = new EmbedBuilder()
+  .setTitle("💰 Pack Recommendation")
+  .addFields(
+    { name: "Level", value: `${start} → ${target}` },
+    { name: "XP Needed", value: neededXP.toLocaleString() },
 
+    {
+      name: "Pack 1",
+      value: `${results[0].amount}x (${results[0].cost}${DL})`
+    },
+    {
+      name: "Pack 2",
+      value: `${results[1].amount}x (${results[1].cost}${DL})`
+    },
+    {
+      name: "Pack 3",
+      value: `${results[2].amount}x (${results[2].cost}${DL})`
+    },
+    {
+      name: "✅ Best Choice",
+      value: `${best.name} (${best.cost}${DL})`
+    }
+  );
     await interaction.reply({ embeds: [embed] });
   }
 
