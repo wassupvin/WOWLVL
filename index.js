@@ -94,7 +94,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
 (async () => {
   await rest.put(
-    Routes.applicationGuildCommands("CLIENT_ID_KAMU", "GUILD_ID_KAMU"),
+    Routes.applicationGuildCommands("1507572125202911344", "1502085438674833558"),
     { body: commands }
   );
 })();
