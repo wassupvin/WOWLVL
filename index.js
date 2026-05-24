@@ -28,6 +28,7 @@ const PACK_3 = "<:PACK_3:1508079419934249031>";
 const RIGHTWING = "<:RIGHTWING:1508078210401959997>";
 const LEFTWING = "<:LEFTWING:1508078152935669911>";
 const VERIFIED = "<:VERIFIED:1508075987227906138>";
+const BGL = "<:BGL:1508256826385502228>";
 
 // ===== XP TABLE =====
 const totalXP = {
@@ -109,43 +110,43 @@ client.on("interactionCreate", async (interaction) => {
     const pack1XP = base + coconut + dragon;
     const pack23XP = (base + coconut + dragon) * 1.2;
 
-    // ===== PACK =====
+    // ===== PACK (SUDAH BGL) =====
     const results = [
 
       (() => {
         const ghosts = Math.floor(129000 / pack1XP);
         const total = ghosts * pack1XP;
         const amount = Math.ceil(neededXP / total);
-        return { name: "Pack 1", amount, cost: amount * 20 };
+        return { name: "Pack 1", amount, cost: ((amount * 20) / 100).toFixed(2) };
       })(),
 
       (() => {
         const ghosts = Math.floor(619200 / pack23XP);
         const total = ghosts * pack23XP;
         const amount = Math.ceil(neededXP / total);
-        return { name: "Pack 2", amount, cost: amount * 40 };
+        return { name: "Pack 2", amount, cost: ((amount * 40) / 100).toFixed(2) };
       })(),
 
       (() => {
         const ghosts = Math.floor(1238400 / pack23XP);
         const total = ghosts * pack23XP;
         const amount = Math.ceil(neededXP / total);
-        return { name: "Pack 3", amount, cost: amount * 75 };
+        return { name: "Pack 3", amount, cost: ((amount * 75) / 100).toFixed(2) };
       })()
 
     ];
 
-    const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
+    const best = results.reduce((a, b) => parseFloat(a.cost) < parseFloat(b.cost) ? a : b);
 
     const embed = new EmbedBuilder()
       .setTitle(`${LEFTWING} Need Level? Go WOWLVL ${RIGHTWING}`)
       .addFields(
         { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
         { name: "Total XP", value: neededXP.toLocaleString() },
-        { name: `Pack ${PACK_1}`, value: `${results[0].amount}x (${results[0].cost} ${DL})` },
-        { name: `Pack ${PACK_2}`, value: `${results[1].amount}x (${results[1].cost} ${DL})` },
-        { name: `Pack ${PACK_3}`, value: `${results[2].amount}x (${results[2].cost} ${DL})` },
-        { name: `Best Pack ${VERIFIED}`, value: `${best.name} (${best.cost} ${DL})` }
+        { name: `Pack ${PACK_1}`, value: `${results[0].amount}x (${results[0].cost} ${BGL})` },
+        { name: `Pack ${PACK_2}`, value: `${results[1].amount}x (${results[1].cost} ${BGL})` },
+        { name: `Pack ${PACK_3}`, value: `${results[2].amount}x (${results[2].cost} ${BGL})` },
+        { name: `Best Pack ${VERIFIED}`, value: `${best.name} (${best.cost} ${BGL})` }
       );
 
     await interaction.reply({ embeds: [embed] });
