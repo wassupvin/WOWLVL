@@ -165,19 +165,19 @@ const embed = new EmbedBuilder()
 
     {
       name: "Pack 1",
-      value: `${results[0].amount}x (${results[0].cost}${ DL })`
+      value: `${results[0].amount}x (${results[0].cost}$ { DL })`
     },
     {
       name: "Pack 2",
-      value: `${results[1].amount}x (${results[1].cost}${ DL })`
+      value: `${results[1].amount}x (${results[1].cost}$ { DL })`
     },
     {
       name: "Pack 3",
-      value: `${results[2].amount}x (${results[2].cost}${ DL })`
+      value: `${results[2].amount}x (${results[2].cost}$ { DL })`
     },
     {
       name: "✅ Best Choice",
-      value: `${best.name} (${best.cost}${ DL })`
+      value: `${best.name} (${best.cost}$ { DL })`
     }
   );
     await interaction.reply({ embeds: [embed] });
