@@ -6,7 +6,10 @@ const {
   StringSelectMenuBuilder,
   EmbedBuilder,
   REST,
-  Routes
+  Routes,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle
 } = require("discord.js");
 
 const client = new Client({
@@ -18,35 +21,32 @@ const client = new Client({
 });
 
 let lastStickyMessageId = null;
+let userData = {};
 
-// 👉 GANTI DENGAN LINK FOTO KAMU
-const IMAGE_URL = "https://cdn.discordapp.com/attachments/1507770268611903548/1507770550469005483/Transparent_Background.png?ex=6a131c40&is=6a11cac0&hm=b092c31f30068530f0ff40620ce65d1a9b9ff3aa11826b141618124e615e732f&";
+const IMAGE_URL = "https://cdn.discordapp.com/attachments/1507770268611903548/1507770550469005483/Transparent_Background.png";
 
+// ===== STICKY =====
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
-  const channel = message.channel;
-
   try {
-    // hapus sticky lama
     if (lastStickyMessageId) {
-      const oldMsg = await channel.messages.fetch(lastStickyMessageId);
+      const oldMsg = await message.channel.messages.fetch(lastStickyMessageId);
       if (oldMsg) await oldMsg.delete();
     }
 
-    // kirim sticky baru (foto)
-    const newMsg = await channel.send({
+    const newMsg = await message.channel.send({
       content: "Need Level? Go **WOWLVL**",
       files: [IMAGE_URL]
     });
 
-    // simpan ID
     lastStickyMessageId = newMsg.id;
-
   } catch (err) {
-    console.log("Error:", err.message);
+    console.log(err);
   }
 });
+
+// ===== REGISTER COMMAND =====
 const commands = [
   new SlashCommandBuilder()
     .setName("calculator")
@@ -61,19 +61,22 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
     { body: commands }
   );
 })();
-client.login(process.env.TOKEN);
-const {
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-  ActionRowBuilder
-} = require("discord.js");
 
-let userData = {};
+// ===== FUNCTION XP =====
+function calculateXP(start, target) {
+  let total = 0;
 
+  for (let lvl = start; lvl < target; lvl++) {
+    total += 50 + (lvl * lvl * 10);
+  }
+
+  return total;
+}
+
+// ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
 
-  // 🔹 STEP 1: COMMAND
+  // STEP 1 - OPEN FORM
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === "calculator") {
 
@@ -81,32 +84,32 @@ client.on("interactionCreate", async (interaction) => {
         .setCustomId("calcModal")
         .setTitle("XP Calculator");
 
-      const currentLevel = new TextInputBuilder()
+      const input1 = new TextInputBuilder()
         .setCustomId("currentLevel")
         .setLabel("Level sekarang")
         .setStyle(TextInputStyle.Short);
 
-      const targetLevel = new TextInputBuilder()
+      const input2 = new TextInputBuilder()
         .setCustomId("targetLevel")
         .setLabel("Level tujuan")
         .setStyle(TextInputStyle.Short);
 
-      const currentXP = new TextInputBuilder()
+      const input3 = new TextInputBuilder()
         .setCustomId("currentXP")
         .setLabel("XP sekarang")
         .setStyle(TextInputStyle.Short);
 
       modal.addComponents(
-        new ActionRowBuilder().addComponents(currentLevel),
-        new ActionRowBuilder().addComponents(targetLevel),
-        new ActionRowBuilder().addComponents(currentXP)
+        new ActionRowBuilder().addComponents(input1),
+        new ActionRowBuilder().addComponents(input2),
+        new ActionRowBuilder().addComponents(input3)
       );
 
       await interaction.showModal(modal);
     }
   }
 
-  // 🔹 STEP 2: SUBMIT FORM
+  // STEP 2 - SAVE DATA
   if (interaction.isModalSubmit()) {
     if (interaction.customId === "calcModal") {
 
@@ -123,20 +126,17 @@ client.on("interactionCreate", async (interaction) => {
           { label: "Ghost Catching", value: "ghost" }
         ]);
 
-      const row = new ActionRowBuilder().addComponents(menu);
-
       await interaction.reply({
         content: "Pilih metode:",
-        components: [row]
+        components: [new ActionRowBuilder().addComponents(menu)]
       });
     }
   }
 
-  // 🔹 STEP 3: PILIH MODE
+  // STEP 3 - PILIH MODE
   if (interaction.isStringSelectMenu()) {
 
     if (interaction.customId === "mode") {
-
       const menu = new StringSelectMenuBuilder()
         .setCustomId("buff")
         .setPlaceholder("XP Boost")
@@ -146,29 +146,32 @@ client.on("interactionCreate", async (interaction) => {
           { label: "10%", value: "10" }
         ]);
 
-      const row = new ActionRowBuilder().addComponents(menu);
-
       await interaction.update({
         content: "Pilih XP Boost:",
-        components: [row]
+        components: [new ActionRowBuilder().addComponents(menu)]
       });
     }
 
-    // 🔹 STEP 4: HITUNG
+    // STEP 4 - HITUNG
     if (interaction.customId === "buff") {
 
       const data = userData[interaction.user.id];
+
+      const start = parseInt(data.currentLevel);
+      const target = parseInt(data.targetLevel);
+      const currentXP = parseInt(data.currentXP);
       const buff = parseInt(interaction.values[0]);
 
-      const baseXP = 32174900;
-      const result = Math.floor(baseXP / (1 + buff / 100));
+      let neededXP = calculateXP(start, target) - currentXP;
+      let finalXP = Math.floor(neededXP / (1 + buff / 100));
 
       const embed = new EmbedBuilder()
         .setTitle("📊 Hasil Calculator")
         .addFields(
-          { name: "Level", value: `${data.currentLevel} → ${data.targetLevel}` },
-          { name: "XP Awal", value: data.currentXP },
-          { name: "XP Dibutuhkan", value: result.toLocaleString() }
+          { name: "Level", value: `${start} → ${target}` },
+          { name: "XP Awal", value: currentXP.toLocaleString() },
+          { name: "XP Dibutuhkan", value: neededXP.toLocaleString() },
+          { name: "Setelah Buff", value: finalXP.toLocaleString() }
         );
 
       await interaction.update({
@@ -180,48 +183,5 @@ client.on("interactionCreate", async (interaction) => {
 
 });
 
-  if (interaction.isChatInputCommand()) {
-    if (interaction.commandName === "calculator") {
-
-      const embed = new EmbedBuilder()
-        .setTitle("⭐ Calculator")
-        .setDescription("Pilih menu di bawah")
-        .setColor(0x00ffcc);
-
-      const menu = new StringSelectMenuBuilder()
-        .setCustomId("menu")
-        .setPlaceholder("Pilih fitur")
-        .addOptions([
-          { label: "Ghost Catching", value: "ghost" },
-          { label: "XP Buff", value: "buff" }
-        ]);
-
-      const row = new ActionRowBuilder().addComponents(menu);
-
-      await interaction.reply({
-        embeds: [embed],
-        components: [row]
-      });
-    }
-  }
-
-  if (interaction.isStringSelectMenu()) {
-
-    if (interaction.values[0] === "ghost") {
-      await interaction.update({
-        content: "👻 Ghost dipilih!",
-        embeds: [],
-        components: []
-      });
-    }
-
-    if (interaction.values[0] === "buff") {
-      await interaction.update({
-        content: "⚡ Buff dipilih!",
-        embeds: [],
-        components: []
-      });
-    }
-  }
-
-});
+// ===== LOGIN =====
+client.login(process.env.TOKEN);
