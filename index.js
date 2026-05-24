@@ -25,6 +25,21 @@ let userData = {};
 
 const IMAGE_URL = "https://cdn.discordapp.com/attachments/1507770268611903548/1507770550469005483/Transparent_Background.png";
 
+// ===== XP TABLE (CONTOH, LANJUTIN SAMPAI 125) =====
+const xpTable = {
+  1: 0,
+  2: 50,
+  3: 150,
+  4: 300,
+  5: 500,
+  6: 750,
+  7: 1050,
+  8: 1400,
+  9: 1800,
+  10: 2250
+  // 👉 lanjut dari spreadsheet kamu sampai 125
+};
+
 // ===== STICKY =====
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
@@ -61,15 +76,6 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
     { body: commands }
   );
 })();
-
-// ===== XP FUNCTION =====
-function calculateXP(start, target) {
-  let total = 0;
-  for (let lvl = start; lvl < target; lvl++) {
-    total += 50 + (lvl * lvl * 10);
-  }
-  return total;
-}
 
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
@@ -112,9 +118,9 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.customId === "calcModal") {
 
       userData[interaction.user.id] = {
-        currentLevel: interaction.fields.getTextInputValue("currentLevel"),
-        targetLevel: interaction.fields.getTextInputValue("targetLevel"),
-        currentXP: interaction.fields.getTextInputValue("currentXP")
+        currentLevel: parseInt(interaction.fields.getTextInputValue("currentLevel")),
+        targetLevel: parseInt(interaction.fields.getTextInputValue("targetLevel")),
+        currentXP: parseInt(interaction.fields.getTextInputValue("currentXP"))
       };
 
       const menu = new StringSelectMenuBuilder()
@@ -131,10 +137,10 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  // STEP 3 + 4
+  // STEP 3 & 4
   if (interaction.isStringSelectMenu()) {
 
-    // PILIH MODE
+    // MODE
     if (interaction.customId === "mode") {
 
       const menu = new StringSelectMenuBuilder()
@@ -159,12 +165,23 @@ client.on("interactionCreate", async (interaction) => {
 
       const data = userData[interaction.user.id];
 
-      const start = parseInt(data.currentLevel);
-      const target = parseInt(data.targetLevel);
-      const currentXP = parseInt(data.currentXP);
+      const start = data.currentLevel;
+      const target = data.targetLevel;
+      const currentXP = data.currentXP;
       const buffType = interaction.values[0];
 
-      let neededXP = calculateXP(start, target) - currentXP;
+      const xpNow = xpTable[start];
+      const xpTarget = xpTable[target];
+
+      if (!xpNow || !xpTarget) {
+        return interaction.update({
+          content: "❌ Level belum ada di xpTable (lengkapi dulu sampai 125)",
+          components: []
+        });
+      }
+
+      let neededXP = xpTarget - xpNow - currentXP;
+      if (neededXP < 0) neededXP = 0;
 
       let finalXP = neededXP;
       let info = "";
@@ -185,9 +202,8 @@ client.on("interactionCreate", async (interaction) => {
       }
 
       if (buffType === "dragon") {
-        const xpPerGhost = 300; // 100 base + 200 bonus
+        const xpPerGhost = 300;
         const ghostsNeeded = Math.ceil(neededXP / xpPerGhost);
-
         finalXP = ghostsNeeded;
         info = "+200 XP per ghost";
       }
