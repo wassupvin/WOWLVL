@@ -19,7 +19,7 @@ const client = new Client({
   ]
 });
 
-// ===== EMOJI DL =====
+// ===== EMOJI =====
 const DL = "<:DL:1508030377397190706>";
 
 // ===== STICKY =====
@@ -50,7 +50,7 @@ client.on("messageCreate", async (message) => {
 });
 
 // ===== XP TABLE =====
-const totalXP = { /* (tetap sama, ga diubah biar singkat) */ 
+const totalXP = {
   1:100,2:250,3:550,4:1100,5:2000,6:3350,7:5250,8:7800,9:11100,10:15250,
   11:20350,12:26500,13:33800,14:42350,15:52250,16:63600,17:76500,18:91050,19:107350,20:125500,
   21:145600,22:167750,23:192050,24:218600,25:247500,26:278850,27:312750,28:349300,29:388600,30:430750,
@@ -112,58 +112,46 @@ client.on("interactionCreate", async (interaction) => {
     const currentXP = parseInt(interaction.fields.getTextInputValue("xpNow"));
 
     if (!totalXP[start] || !totalXP[target] || start >= target) {
-      return interaction.reply({
-        content: "❌ Level harus valid",
-        ephemeral: true
-      });
+      return interaction.reply({ content: "❌ Level tidak valid", ephemeral: true });
     }
 
-    // ===== XP CALC FIX =====
     let neededXP = (totalXP[target] - totalXP[start]) - currentXP;
     neededXP = Math.round(neededXP);
     if (neededXP > 0) neededXP += 1;
     if (neededXP < 0) neededXP = 0;
 
     // ===== BUFF SYSTEM =====
-    const ghostXP = 550;
+    const base = 8;
     const coconut = 50;
-    const perGhost = ghostXP + coconut; // 600
+    const dragon = 200;
+
+    const pack1XP = base + coconut + dragon; // 258
+    const pack23XP = (base + coconut + dragon) * 1.2; // 309.6
 
     // ===== PACK CALC =====
     const results = [
 
-      // PACK 1 (coconut only)
       (() => {
-        const effectiveXP = perGhost;
-        const amount = Math.ceil(neededXP / effectiveXP);
-        return {
-          name: "Pack 1",
-          amount,
-          cost: amount * 20
-        };
+        const ghosts = Math.floor(125000 / pack1XP);
+        const total = ghosts * pack1XP;
+        const amount = Math.ceil(neededXP / total);
+        return { name: "Pack 1", amount, cost: amount * 20 };
       })(),
 
-      // PACK 2 (coconut + gingerbread)
       (() => {
-        const effectiveXP = 500000 * 1.2;
-        const amount = Math.ceil(neededXP / effectiveXP);
-        return {
-          name: "Pack 2",
-          amount,
-          cost: amount * 40
-        };
+        const ghosts = Math.floor(500000 / pack23XP);
+        const total = ghosts * pack23XP;
+        const amount = Math.ceil(neededXP / total);
+        return { name: "Pack 2", amount, cost: amount * 40 };
       })(),
 
-      // PACK 3 (coconut + gingerbread)
       (() => {
-        const effectiveXP = 1000000 * 1.2;
-        const amount = Math.ceil(neededXP / effectiveXP);
-        return {
-          name: "Pack 3",
-          amount,
-          cost: amount * 75
-        };
+        const ghosts = Math.floor(1000000 / pack23XP);
+        const total = ghosts * pack23XP;
+        const amount = Math.ceil(neededXP / total);
+        return { name: "Pack 3", amount, cost: amount * 75 };
       })()
+
     ];
 
     const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
@@ -173,11 +161,9 @@ client.on("interactionCreate", async (interaction) => {
       .addFields(
         { name: "Level", value: `${start} → ${target}` },
         { name: "XP Needed", value: neededXP.toLocaleString() },
-
         { name: "Pack 1", value: `${results[0].amount}x (${results[0].cost}${DL})` },
         { name: "Pack 2", value: `${results[1].amount}x (${results[1].cost}${DL})` },
         { name: "Pack 3", value: `${results[2].amount}x (${results[2].cost}${DL})` },
-
         { name: "✅ Best Choice", value: `${best.name} (${best.cost}${DL})` }
       );
 
