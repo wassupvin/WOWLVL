@@ -132,10 +132,13 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-let neededXP = totalXP[target] - totalXP[start] - currentXP;
+let neededXP = (totalXP[target] - totalXP[start]) - currentXP;
 
-// 🔥 FIX biar sama persis web (hindarin kurang 1)
-neededXP = Math.ceil(neededXP);
+// 🔥 pakai round + +1 biar exact kayak kalkulator lain
+neededXP = Math.round(neededXP + 0.00001);
+
+// FIX tambahan (biar ga pernah kurang 1)
+if (neededXP > 0) neededXP += 1;
 
 if (neededXP < 0) neededXP = 0;
 
