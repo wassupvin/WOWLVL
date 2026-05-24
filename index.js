@@ -27,6 +27,7 @@ const PACK_2 = "<:PACK_2:1508070224845603026>";
 const PACK_3 = "<:PACK_3:1508070301655760967>";
 const RIGHTWING = "<:RIGHTWING:1508072223959945368>";
 const LEFTWING = "<:LEFTWING:1508072131806892102>";
+const VERIFIED = "<:VERIFIED:1508075987227906138>";
 
 // ===== XP TABLE =====
 const totalXP = {
@@ -141,10 +142,10 @@ client.on("interactionCreate", async (interaction) => {
       .addFields(
         { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
         { name: "Total XP", value: neededXP.toLocaleString() },
-        { name: `${PACK_1} Pack 1`, value: `${results[0].amount}x (${results[0].cost} ${DL})` },
-        { name: `${PACK_2} Pack 2`, value: `${results[1].amount}x (${results[1].cost} ${DL})` },
-        { name: `${PACK_3} Pack 3`, value: `${results[2].amount}x (${results[2].cost} ${DL})` },
-        { name: "✅ Best Pack", value: `${best.name} (${best.cost} ${DL})` }
+        { name: `Pack ${PACK_1}`, value: `${results[0].amount}x (${results[0].cost} ${DL})` },
+        { name: `Pack ${PACK_2}`, value: `${results[1].amount}x (${results[1].cost} ${DL})` },
+        { name: `Pack ${PACK_3}`, value: `${results[2].amount}x (${results[2].cost} ${DL})` },
+        { name: `Best Pack ${VERIFIED}`, value: `${best.name} (${best.cost} ${DL})` }
       );
 
     await interaction.reply({ embeds: [embed] });
