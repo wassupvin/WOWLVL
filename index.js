@@ -19,7 +19,7 @@ const client = new Client({
   ]
 });
 
-// ===== GLOBAL =====
+// ===== GLOBAL (AUTO EDIT MESSAGE) =====
 let lastStatusMessage = null;
 
 // ===== EMOJI =====
@@ -45,7 +45,7 @@ function formatCurrency(dlAmount) {
   return `${dl}${DL}`;
 }
 
-// ===== XP TABLE =====
+// ===== XP TABLE (FULL) =====
 const totalXP = {
   1:100,2:250,3:550,4:1100,5:2000,6:3350,7:5250,8:7800,9:11100,10:15250,
   11:20350,12:26500,13:33800,14:42350,15:52250,16:63600,17:76500,18:91050,19:107350,20:125500,
@@ -64,7 +64,7 @@ const totalXP = {
 
 // ===== COMMAND =====
 const commands = [
-  new SlashCommandBuilder().setName("calculator").setDescription("XP Calculator + Pack Recommendation"),
+  new SlashCommandBuilder().setName("calculator").setDescription("XP Calculator"),
   new SlashCommandBuilder().setName("open").setDescription("Set OPEN"),
   new SlashCommandBuilder().setName("closed").setDescription("Set CLOSED")
 ];
@@ -77,6 +77,16 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
     { body: commands }
   );
 })();
+
+// ===== READY =====
+client.on("ready", () => {
+  console.log(`Logged in as ${client.user.tag}`);
+
+  client.user.setPresence({
+    activities: [{ name: "🟢 OPEN", type: 0 }],
+    status: "online"
+  });
+});
 
 // ===== OWNER CHECK =====
 async function isOwner(interaction) {
@@ -91,6 +101,7 @@ client.on("interactionCreate", async (interaction) => {
 
     // ===== CALCULATOR =====
     if (interaction.commandName === "calculator") {
+
       const modal = new ModalBuilder()
         .setCustomId("calc")
         .setTitle("XP Calculator");
@@ -110,52 +121,89 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.showModal(modal);
     }
 
-    // ===== OWNER CHECK =====
+    // ===== OWNER ONLY =====
     if (["open", "closed"].includes(interaction.commandName)) {
-      if (!(await isOwner(interaction))) {
-        return interaction.reply({ content: "❌ Only owner!", ephemeral: true });
+      const owner = await isOwner(interaction);
+      if (!owner) {
+        return interaction.reply({
+          content: "❌ Only server owner!",
+          ephemeral: true
+        });
       }
     }
 
-    // ===== OPEN / CLOSED =====
-    if (interaction.commandName === "open" || interaction.commandName === "closed") {
-
-      const isOpen = interaction.commandName === "open";
+    // ===== OPEN =====
+    if (interaction.commandName === "open") {
 
       client.user.setPresence({
-        activities: [{ name: isOpen ? "OPEN" : "CLOSED", type: 0 }],
-        status: isOpen ? "online" : "dnd"
+        activities: [{ name: "🟢 OPEN", type: 0 }],
+        status: "online"
       });
 
       const embed = new EmbedBuilder()
-        .setColor(isOpen ? "Green" : "Red")
+        .setColor("Green")
         .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-        .setDescription(
-          isOpen
-            ? `${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`
-            : `${CLOSEDSIGN} **SERVICE IS CURRENTLY CLOSED** ${CLOSEDSIGN}`
-        )
+        .setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`)
         .addFields(
-          { name: "Status", value: isOpen ? `${OPENSIGN} OPEN` : `${CLOSEDSIGN} CLOSED`, inline: true },
-          { name: "Info", value: isOpen ? "Order now!" : "Please wait...", inline: true }
+          { name: "Status", value: `${OPENSIGN} OPEN`, inline: true },
+          { name: "Info", value: "Order now!", inline: true }
         );
 
       if (lastStatusMessage) {
-        try { await lastStatusMessage.delete(); } catch {}
+        await lastStatusMessage.edit({
+          content: "@everyone",
+          embeds: [embed],
+          allowedMentions: { parse: ["everyone"] }
+        });
+        return interaction.reply({ content: "✅ Updated", ephemeral: true });
       }
 
-      const msg = await interaction.reply({
+      await interaction.reply({
         content: "@everyone",
         embeds: [embed],
-        allowedMentions: { parse: ["everyone"] },
-        fetchReply: true
+        allowedMentions: { parse: ["everyone"] }
       });
 
-      lastStatusMessage = msg;
+      lastStatusMessage = await interaction.fetchReply();
+    }
+
+    // ===== CLOSED =====
+    if (interaction.commandName === "closed") {
+
+      client.user.setPresence({
+        activities: [{ name: "🔴 CLOSED", type: 0 }],
+        status: "dnd"
+      });
+
+      const embed = new EmbedBuilder()
+        .setColor("Red")
+        .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
+        .setDescription(`${CLOSEDSIGN} **SERVICE IS CLOSED** ${CLOSEDSIGN}`)
+        .addFields(
+          { name: "Status", value: `${CLOSEDSIGN} CLOSED`, inline: true },
+          { name: "Info", value: "Wait until open.", inline: true }
+        );
+
+      if (lastStatusMessage) {
+        await lastStatusMessage.edit({
+          content: "@everyone",
+          embeds: [embed],
+          allowedMentions: { parse: ["everyone"] }
+        });
+        return interaction.reply({ content: "✅ Updated", ephemeral: true });
+      }
+
+      await interaction.reply({
+        content: "@everyone",
+        embeds: [embed],
+        allowedMentions: { parse: ["everyone"] }
+      });
+
+      lastStatusMessage = await interaction.fetchReply();
     }
   }
 
-  // ===== MODAL SUBMIT =====
+  // ===== MODAL SUBMIT (CALCULATOR FULL) =====
   if (interaction.isModalSubmit()) {
 
     const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
