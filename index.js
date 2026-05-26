@@ -8,7 +8,8 @@ const {
   Routes,
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle
+  TextInputStyle,
+  Events
 } = require("discord.js");
 
 const client = new Client({
@@ -19,7 +20,7 @@ const client = new Client({
   ]
 });
 
-// ===== GLOBAL (AUTO EDIT MESSAGE) =====
+// ===== GLOBAL =====
 let lastStatusMessage = null;
 
 // ===== EMOJI =====
@@ -45,7 +46,7 @@ function formatCurrency(dlAmount) {
   return `${dl}${DL}`;
 }
 
-// ===== XP TABLE (FULL) =====
+// ===== XP TABLE =====
 const totalXP = {
   1:100,2:250,3:550,4:1100,5:2000,6:3350,7:5250,8:7800,9:11100,10:15250,
   11:20350,12:26500,13:33800,14:42350,15:52250,16:63600,17:76500,18:91050,19:107350,20:125500,
@@ -78,14 +79,9 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
   );
 })();
 
-// ===== READY =====
-client.on("ready", () => {
+// ===== READY FIX =====
+client.once(Events.ClientReady, () => {
   console.log(`Logged in as ${client.user.tag}`);
-
-  client.user.setPresence({
-    activities: [{ name: "🟢 OPEN", type: 0 }],
-    status: "online"
-  });
 });
 
 // ===== OWNER CHECK =====
@@ -99,7 +95,7 @@ client.on("interactionCreate", async (interaction) => {
 
   if (interaction.isChatInputCommand()) {
 
-    // ===== CALCULATOR =====
+    // ===== CALCULATOR (TIDAK DIUBAH) =====
     if (interaction.commandName === "calculator") {
 
       const modal = new ModalBuilder()
@@ -121,14 +117,10 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.showModal(modal);
     }
 
-    // ===== OWNER ONLY =====
+    // ===== OWNER CHECK =====
     if (["open", "closed"].includes(interaction.commandName)) {
-      const owner = await isOwner(interaction);
-      if (!owner) {
-        return interaction.reply({
-          content: "❌ Only server owner!",
-          ephemeral: true
-        });
+      if (!(await isOwner(interaction))) {
+        return interaction.reply({ content: "❌ Only owner!", flags: 64 });
       }
     }
 
@@ -136,7 +128,7 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.commandName === "open") {
 
       client.user.setPresence({
-        activities: [{ name: "🟢 OPEN", type: 0 }],
+        activities: [{ name: `${OPENSIGN} OPEN`, type: 0 }],
         status: "online"
       });
 
@@ -150,12 +142,7 @@ client.on("interactionCreate", async (interaction) => {
         );
 
       if (lastStatusMessage) {
-        await lastStatusMessage.edit({
-          content: "@everyone",
-          embeds: [embed],
-          allowedMentions: { parse: ["everyone"] }
-        });
-        return interaction.reply({ content: "✅ Updated", ephemeral: true });
+        try { await lastStatusMessage.delete(); } catch {}
       }
 
       await interaction.reply({
@@ -171,7 +158,7 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.commandName === "closed") {
 
       client.user.setPresence({
-        activities: [{ name: "🔴 CLOSED", type: 0 }],
+        activities: [{ name: `${CLOSEDSIGN} CLOSED`, type: 0 }],
         status: "dnd"
       });
 
@@ -181,16 +168,11 @@ client.on("interactionCreate", async (interaction) => {
         .setDescription(`${CLOSEDSIGN} **SERVICE IS CLOSED** ${CLOSEDSIGN}`)
         .addFields(
           { name: "Status", value: `${CLOSEDSIGN} CLOSED`, inline: true },
-          { name: "Info", value: "Wait until open.", inline: true }
+          { name: "Info", value: "Please wait...", inline: true }
         );
 
       if (lastStatusMessage) {
-        await lastStatusMessage.edit({
-          content: "@everyone",
-          embeds: [embed],
-          allowedMentions: { parse: ["everyone"] }
-        });
-        return interaction.reply({ content: "✅ Updated", ephemeral: true });
+        try { await lastStatusMessage.delete(); } catch {}
       }
 
       await interaction.reply({
@@ -203,7 +185,7 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  // ===== MODAL SUBMIT (CALCULATOR FULL) =====
+  // ===== MODAL (TIDAK DIUBAH) =====
   if (interaction.isModalSubmit()) {
 
     const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
@@ -211,7 +193,7 @@ client.on("interactionCreate", async (interaction) => {
     const currentXP = parseInt(interaction.fields.getTextInputValue("xpNow"));
 
     if (!totalXP[start] || !totalXP[target] || start >= target) {
-      return interaction.reply({ content: "❌ Level tidak valid", ephemeral: true });
+      return interaction.reply({ content: "❌ Level tidak valid", flags: 64 });
     }
 
     let neededXP = (totalXP[target] - totalXP[start]) - currentXP;
@@ -227,28 +209,24 @@ client.on("interactionCreate", async (interaction) => {
     const pack23XP = (base + coconut + dragon) * 1.2;
 
     const results = [
-
       (() => {
         const ghosts = Math.floor(129000 / pack1XP);
         const total = ghosts * pack1XP;
         const amount = Math.ceil(neededXP / total);
         return { name: "Pack 1", amount, cost: amount * 20 };
       })(),
-
       (() => {
         const ghosts = Math.floor(619200 / pack23XP);
         const total = ghosts * pack23XP;
         const amount = Math.ceil(neededXP / total);
         return { name: "Pack 2", amount, cost: amount * 40 };
       })(),
-
       (() => {
         const ghosts = Math.floor(1238400 / pack23XP);
         const total = ghosts * pack23XP;
         const amount = Math.ceil(neededXP / total);
         return { name: "Pack 3", amount, cost: amount * 75 };
       })()
-
     ];
 
     const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
