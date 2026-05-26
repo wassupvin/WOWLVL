@@ -46,7 +46,12 @@ function formatCurrency(dlAmount) {
 }
 
 // ===== XP TABLE =====
-const totalXP = { /* tetap sama */ };
+const totalXP = {
+  1:100,2:250,3:550,4:1100,5:2000,6:3350,7:5250,8:7800,9:11100,10:15250,
+  11:20350,12:26500,13:33800,14:42350,15:52250,16:63600,17:76500,18:91050,19:107350,20:125500,
+  21:145600,22:167750,23:192050,24:218600,25:247500,26:278850,27:312750,28:349300,29:388600,30:430750,
+  31:475850,32:524000,33:575300,34:629850,35:687750,36:749100,37:814000,38:882550,39:954850,40:1031000
+};
 
 // ===== COMMAND =====
 const commands = [
@@ -64,16 +69,16 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
   );
 })();
 
-// ===== READY =====
-client.on("ready", () => {
-  console.log(`Logged in as ${client.user.tag}`);
-});
-
 // ===== OWNER CHECK =====
 async function isOwner(interaction) {
   const guild = await interaction.guild.fetch();
   return interaction.user.id === guild.ownerId;
 }
+
+// ===== READY =====
+client.on("ready", () => {
+  console.log(`Logged in as ${client.user.tag}`);
+});
 
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
@@ -103,8 +108,7 @@ client.on("interactionCreate", async (interaction) => {
 
     // ===== OWNER CHECK =====
     if (["open", "closed"].includes(interaction.commandName)) {
-      const owner = await isOwner(interaction);
-      if (!owner) {
+      if (!(await isOwner(interaction))) {
         return interaction.reply({
           content: "❌ Only server owner can use this command!",
           ephemeral: true
@@ -112,52 +116,27 @@ client.on("interactionCreate", async (interaction) => {
       }
     }
 
-    // ===== OPEN =====
-    if (interaction.commandName === "open") {
+    // ===== OPEN / CLOSED =====
+    if (interaction.commandName === "open" || interaction.commandName === "closed") {
+
+      const isOpen = interaction.commandName === "open";
 
       client.user.setPresence({
-        activities: [{ name: "🟢 OPEN", type: 0 }],
-        status: "online"
+        activities: [{ name: isOpen ? "🟢 OPEN" : "🔴 CLOSED", type: 0 }],
+        status: isOpen ? "online" : "dnd"
       });
 
       const embed = new EmbedBuilder()
-        .setColor("Green")
+        .setColor(isOpen ? "Green" : "Red")
         .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-        .setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`)
+        .setDescription(
+          isOpen
+            ? `${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`
+            : `${CLOSEDSIGN} **SERVICE IS CURRENTLY CLOSED** ${CLOSEDSIGN}`
+        )
         .addFields(
-          { name: "Status", value: `${OPENSIGN} OPEN`, inline: true },
-          { name: "Info", value: "Order now!", inline: true }
-        );
-
-      if (lastStatusMessage) {
-        try { await lastStatusMessage.delete(); } catch {}
-      }
-
-      const msg = await interaction.reply({
-        content: "@everyone",
-        embeds: [embed],
-        allowedMentions: { parse: ["everyone"] },
-        fetchReply: true
-      });
-
-      lastStatusMessage = msg;
-    }
-
-    // ===== CLOSED =====
-    if (interaction.commandName === "closed") {
-
-      client.user.setPresence({
-        activities: [{ name: "🔴 CLOSED", type: 0 }],
-        status: "dnd"
-      });
-
-      const embed = new EmbedBuilder()
-        .setColor("Red")
-        .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-        .setDescription(`${CLOSEDSIGN} **SERVICE IS CURRENTLY CLOSED** ${CLOSEDSIGN}`)
-        .addFields(
-          { name: "Status", value: `${CLOSEDSIGN} CLOSED`, inline: true },
-          { name: "Info", value: "Please wait until service open.", inline: true }
+          { name: "Status", value: isOpen ? `${OPENSIGN} OPEN` : `${CLOSEDSIGN} CLOSED`, inline: true },
+          { name: "Info", value: isOpen ? "Order now!" : "Please wait...", inline: true }
         );
 
       if (lastStatusMessage) {
@@ -187,6 +166,7 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     let neededXP = (totalXP[target] - totalXP[start]) - currentXP;
+    neededXP = Math.round(neededXP);
     if (neededXP > 0) neededXP += 1;
     if (neededXP < 0) neededXP = 0;
 
@@ -198,16 +178,41 @@ client.on("interactionCreate", async (interaction) => {
     const pack23XP = (base + coconut + dragon) * 1.2;
 
     const results = [
-      { name: "Pack 1", amount: Math.ceil(neededXP / (Math.floor(129000 / pack1XP) * pack1XP)), cost: 20 },
-      { name: "Pack 2", amount: Math.ceil(neededXP / (Math.floor(619200 / pack23XP) * pack23XP)), cost: 40 },
-      { name: "Pack 3", amount: Math.ceil(neededXP / (Math.floor(1238400 / pack23XP) * pack23XP)), cost: 75 }
+
+      (() => {
+        const ghosts = Math.floor(129000 / pack1XP);
+        const total = ghosts * pack1XP;
+        const amount = Math.ceil(neededXP / total);
+        return { name: "Pack 1", amount, cost: amount * 20 };
+      })(),
+
+      (() => {
+        const ghosts = Math.floor(619200 / pack23XP);
+        const total = ghosts * pack23XP;
+        const amount = Math.ceil(neededXP / total);
+        return { name: "Pack 2", amount, cost: amount * 40 };
+      })(),
+
+      (() => {
+        const ghosts = Math.floor(1238400 / pack23XP);
+        const total = ghosts * pack23XP;
+        const amount = Math.ceil(neededXP / total);
+        return { name: "Pack 3", amount, cost: amount * 75 };
+      })()
+
     ];
+
+    const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
 
     const embed = new EmbedBuilder()
       .setTitle(`${LEFTWING} Need Level? Go WOWLVL ${RIGHTWING}`)
       .addFields(
         { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
-        { name: "Total XP", value: neededXP.toLocaleString() }
+        { name: "Total XP", value: neededXP.toLocaleString() },
+        { name: `Pack ${PACK_1}`, value: `${results[0].amount}x (${formatCurrency(results[0].cost)})` },
+        { name: `Pack ${PACK_2}`, value: `${results[1].amount}x (${formatCurrency(results[1].cost)})` },
+        { name: `Pack ${PACK_3}`, value: `${results[2].amount}x (${formatCurrency(results[2].cost)})` },
+        { name: `Best Pack ${VERIFIED}`, value: `${best.name} (${formatCurrency(best.cost)})` }
       );
 
     return interaction.reply({ embeds: [embed] });
