@@ -19,6 +19,9 @@ const client = new Client({
   ]
 });
 
+// ===== GLOBAL =====
+let lastStatusMessage = null;
+
 // ===== EMOJI =====
 const DL = "<:DL:1508062516067045478>";
 const YELLOWSTAR = "<:YELLOWSTAR:1508062626284961872>";
@@ -32,7 +35,7 @@ const BGL = "<:BGL:1508256826385502228>";
 const OPENSIGN = "<:OPENSIGN:1508740529653940294>";
 const CLOSEDSIGN = "<:CLOSEDSIGN:1508740634813665320>";
 
-// ===== FORMAT DL → BGL =====
+// ===== FORMAT =====
 function formatCurrency(dlAmount) {
   const bgl = Math.floor(dlAmount / 100);
   const dl = dlAmount % 100;
@@ -43,7 +46,7 @@ function formatCurrency(dlAmount) {
 }
 
 // ===== XP TABLE =====
-const totalXP = { /* (tetap sama, ga diubah) */ };
+const totalXP = { /* tetap sama */ };
 
 // ===== COMMAND =====
 const commands = [
@@ -64,14 +67,9 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 // ===== READY =====
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
-
-  client.user.setPresence({
-    activities: [{ name: "🟢 OPEN", type: 0 }],
-    status: "online"
-  });
 });
 
-// ===== OWNER CHECK FUNCTION =====
+// ===== OWNER CHECK =====
 async function isOwner(interaction) {
   const guild = await interaction.guild.fetch();
   return interaction.user.id === guild.ownerId;
@@ -103,7 +101,7 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.showModal(modal);
     }
 
-    // ===== CHECK OWNER FOR OPEN/CLOSED =====
+    // ===== OWNER CHECK =====
     if (["open", "closed"].includes(interaction.commandName)) {
       const owner = await isOwner(interaction);
       if (!owner) {
@@ -131,11 +129,19 @@ client.on("interactionCreate", async (interaction) => {
           { name: "Info", value: "Order now!", inline: true }
         );
 
-      return interaction.reply({
+      // HAPUS PESAN LAMA
+      if (lastStatusMessage) {
+        try { await lastStatusMessage.delete(); } catch {}
+      }
+
+      const msg = await interaction.reply({
         content: "@everyone",
         embeds: [embed],
-        allowedMentions: { parse: ["everyone"] }
+        allowedMentions: { parse: ["everyone"] },
+        fetchReply: true
       });
+
+      lastStatusMessage = msg;
     }
 
     // ===== CLOSED =====
@@ -155,11 +161,19 @@ client.on("interactionCreate", async (interaction) => {
           { name: "Info", value: "Please wait until service open.", inline: true }
         );
 
-      return interaction.reply({
+      // HAPUS PESAN LAMA
+      if (lastStatusMessage) {
+        try { await lastStatusMessage.delete(); } catch {}
+      }
+
+      const msg = await interaction.reply({
         content: "@everyone",
         embeds: [embed],
-        allowedMentions: { parse: ["everyone"] }
+        allowedMentions: { parse: ["everyone"] },
+        fetchReply: true
       });
+
+      lastStatusMessage = msg;
     }
   }
 
