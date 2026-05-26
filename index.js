@@ -66,7 +66,8 @@ const totalXP = {
 const commands = [
   new SlashCommandBuilder().setName("calculator").setDescription("XP Calculator"),
   new SlashCommandBuilder().setName("open").setDescription("Set OPEN"),
-  new SlashCommandBuilder().setName("closed").setDescription("Set CLOSED")
+  new SlashCommandBuilder().setName("closed").setDescription("Set CLOSED"),
+  new SlashCommandBuilder().setName("testimonial").setDescription("Send testimonial (Owner Only)")
 ];
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
@@ -108,6 +109,31 @@ client.on("interactionCreate", async (interaction) => {
         ),
         new ActionRowBuilder().addComponents(
           new TextInputBuilder().setCustomId("xpNow").setLabel("Start XP").setStyle(TextInputStyle.Short)
+        )
+      );
+
+      return interaction.showModal(modal);
+    }
+
+    if (interaction.commandName === "testimonial") {
+      const owner = await isOwner(interaction);
+      if (!owner) {
+        return interaction.reply({ content: "❌ Only owner!", ephemeral: true });
+      }
+
+      const modal = new ModalBuilder()
+        .setCustomId("testi")
+        .setTitle("Send Testimonial");
+
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder().setCustomId("lvlStart").setLabel("Level Awal").setStyle(TextInputStyle.Short)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder().setCustomId("lvlEnd").setLabel("Level Akhir").setStyle(TextInputStyle.Short)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder().setCustomId("message").setLabel("Testimonial").setStyle(TextInputStyle.Paragraph)
         )
       );
 
@@ -184,6 +210,22 @@ client.on("interactionCreate", async (interaction) => {
 
   if (interaction.isModalSubmit()) {
 
+    if (interaction.customId === "testi") {
+      const lvlStart = interaction.fields.getTextInputValue("lvlStart");
+      const lvlEnd = interaction.fields.getTextInputValue("lvlEnd");
+      const message = interaction.fields.getTextInputValue("message");
+
+      const embed = new EmbedBuilder()
+        .setColor("Gold")
+        .setTitle(`${LEFTWING} TESTIMONIAL ${RIGHTWING}`)
+        .addFields(
+          { name: "Level", value: `${lvlStart} → ${lvlEnd}` },
+          { name: "Message", value: message }
+        );
+
+      return interaction.reply({ embeds: [embed] });
+    }
+
     const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
     const target = parseInt(interaction.fields.getTextInputValue("lvlTarget"));
     const currentXP = parseInt(interaction.fields.getTextInputValue("xpNow"));
@@ -205,28 +247,24 @@ client.on("interactionCreate", async (interaction) => {
     const pack23XP = (base + coconut + dragon) * 1.2;
 
     const results = [
-
       (() => {
         const ghosts = Math.floor(129000 / pack1XP);
         const total = ghosts * pack1XP;
         const amount = Math.ceil(neededXP / total);
         return { name: "Pack 1", amount, cost: amount * 20 };
       })(),
-
       (() => {
         const ghosts = Math.floor(619200 / pack23XP);
         const total = ghosts * pack23XP;
         const amount = Math.ceil(neededXP / total);
         return { name: "Pack 2", amount, cost: amount * 40 };
       })(),
-
       (() => {
         const ghosts = Math.floor(1238400 / pack23XP);
         const total = ghosts * pack23XP;
         const amount = Math.ceil(neededXP / total);
         return { name: "Pack 3", amount, cost: amount * 75 };
       })()
-
     ];
 
     const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
