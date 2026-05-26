@@ -20,7 +20,7 @@ const client = new Client({
 });
 
 // ===== GLOBAL =====
-let lastStatusMessage = null;
+let statusMessage = null;
 
 // ===== EMOJI =====
 const DL = "<:DL:1508062516067045478>";
@@ -39,7 +39,6 @@ const CLOSEDSIGN = "<:CLOSEDSIGN:1508740634813665320>";
 function formatCurrency(dlAmount) {
   const bgl = Math.floor(dlAmount / 100);
   const dl = dlAmount % 100;
-
   if (bgl > 0 && dl > 0) return `${bgl}${BGL} ${dl}${DL}`;
   if (bgl > 0) return `${bgl}${BGL}`;
   return `${dl}${DL}`;
@@ -64,16 +63,16 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
   );
 })();
 
-// ===== READY =====
-client.on("ready", () => {
-  console.log(`Logged in as ${client.user.tag}`);
-});
-
 // ===== OWNER CHECK =====
 async function isOwner(interaction) {
   const guild = await interaction.guild.fetch();
   return interaction.user.id === guild.ownerId;
 }
+
+// ===== READY =====
+client.on("ready", () => {
+  console.log(`Logged in as ${client.user.tag}`);
+});
 
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
@@ -112,26 +111,41 @@ client.on("interactionCreate", async (interaction) => {
       }
     }
 
-    // ===== OPEN =====
-    if (interaction.commandName === "open") {
+    // ===== OPEN / CLOSED =====
+    if (interaction.commandName === "open" || interaction.commandName === "closed") {
+
+      const isOpen = interaction.commandName === "open";
 
       client.user.setPresence({
-        activities: [{ name: "🟢 OPEN", type: 0 }],
-        status: "online"
+        activities: [{ name: isOpen ? "🟢 OPEN" : "🔴 CLOSED", type: 0 }],
+        status: isOpen ? "online" : "dnd"
       });
 
       const embed = new EmbedBuilder()
-        .setColor("Green")
+        .setColor(isOpen ? "Green" : "Red")
         .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-        .setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`)
+        .setDescription(
+          isOpen
+            ? `${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`
+            : `${CLOSEDSIGN} **SERVICE IS CURRENTLY CLOSED** ${CLOSEDSIGN}`
+        )
         .addFields(
-          { name: "Status", value: "🟢 OPEN", inline: true },
-          { name: "Info", value: "Order now!", inline: true }
+          { name: "Status", value: isOpen ? "🟢 OPEN" : "🔴 CLOSED", inline: true },
+          { name: "Info", value: isOpen ? "Order now!" : "Please wait...", inline: true }
         );
 
-      // HAPUS PESAN LAMA
-      if (lastStatusMessage) {
-        try { await lastStatusMessage.delete(); } catch {}
+      // ===== AUTO EDIT =====
+      if (statusMessage) {
+        await statusMessage.edit({
+          content: "@everyone",
+          embeds: [embed],
+          allowedMentions: { parse: ["everyone"] }
+        });
+
+        return interaction.reply({
+          content: "✅ Status updated!",
+          ephemeral: true
+        });
       }
 
       const msg = await interaction.reply({
@@ -141,39 +155,7 @@ client.on("interactionCreate", async (interaction) => {
         fetchReply: true
       });
 
-      lastStatusMessage = msg;
-    }
-
-    // ===== CLOSED =====
-    if (interaction.commandName === "closed") {
-
-      client.user.setPresence({
-        activities: [{ name: "🔴 CLOSED", type: 0 }],
-        status: "dnd"
-      });
-
-      const embed = new EmbedBuilder()
-        .setColor("Red")
-        .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-        .setDescription(`${CLOSEDSIGN} **SERVICE IS CURRENTLY CLOSED** ${CLOSEDSIGN}`)
-        .addFields(
-          { name: "Status", value: "🔴 CLOSED", inline: true },
-          { name: "Info", value: "Please wait until service open.", inline: true }
-        );
-
-      // HAPUS PESAN LAMA
-      if (lastStatusMessage) {
-        try { await lastStatusMessage.delete(); } catch {}
-      }
-
-      const msg = await interaction.reply({
-        content: "@everyone",
-        embeds: [embed],
-        allowedMentions: { parse: ["everyone"] },
-        fetchReply: true
-      });
-
-      lastStatusMessage = msg;
+      statusMessage = msg;
     }
   }
 
@@ -191,19 +173,6 @@ client.on("interactionCreate", async (interaction) => {
     let neededXP = (totalXP[target] - totalXP[start]) - currentXP;
     if (neededXP > 0) neededXP += 1;
     if (neededXP < 0) neededXP = 0;
-
-    const base = 8;
-    const coconut = 50;
-    const dragon = 200;
-
-    const pack1XP = base + coconut + dragon;
-    const pack23XP = (base + coconut + dragon) * 1.2;
-
-    const results = [
-      { name: "Pack 1", amount: Math.ceil(neededXP / (Math.floor(129000 / pack1XP) * pack1XP)), cost: 20 },
-      { name: "Pack 2", amount: Math.ceil(neededXP / (Math.floor(619200 / pack23XP) * pack23XP)), cost: 40 },
-      { name: "Pack 3", amount: Math.ceil(neededXP / (Math.floor(1238400 / pack23XP) * pack23XP)), cost: 75 }
-    ];
 
     const embed = new EmbedBuilder()
       .setTitle(`${LEFTWING} Need Level? Go WOWLVL ${RIGHTWING}`)
