@@ -29,6 +29,8 @@ const RIGHTWING = "<:RIGHTWING:1508078210401959997>";
 const LEFTWING = "<:LEFTWING:1508078152935669911>";
 const VERIFIED = "<:VERIFIED:1508075987227906138>";
 const BGL = "<:BGL:1508256826385502228>";
+const OPENSIGN = "<:OPENSIGN:1508740529653940294>";
+const CLOSEDSIGN = "<:CLOSEDSIGN:1508740634813665320>";
 
 // ===== FORMAT DL → BGL =====
 function formatCurrency(dlAmount) {
@@ -61,7 +63,15 @@ const totalXP = {
 const commands = [
   new SlashCommandBuilder()
     .setName("calculator")
-    .setDescription("XP Calculator + Pack Recommendation")
+    .setDescription("XP Calculator + Pack Recommendation"),
+
+  new SlashCommandBuilder()
+    .setName("open")
+    .setDescription("Set status OPEN + announcement"),
+
+  new SlashCommandBuilder()
+    .setName("closed")
+    .setDescription("Set status CLOSED + announcement")
 ];
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
@@ -73,30 +83,87 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
   );
 })();
 
+// ===== READY =====
+client.on("ready", () => {
+  console.log(`Logged in as ${client.user.tag}`);
+
+  client.user.setPresence({
+    activities: [{ name: "🟢 OPEN", type: 0 }],
+    status: "online"
+  });
+});
+
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
 
+  // ===== SLASH COMMAND =====
   if (interaction.isChatInputCommand()) {
 
-    const modal = new ModalBuilder()
-      .setCustomId("calc")
-      .setTitle("XP Calculator");
+    // ===== CALCULATOR =====
+    if (interaction.commandName === "calculator") {
 
-    modal.addComponents(
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId("lvlNow").setLabel("Start Level").setStyle(TextInputStyle.Short)
-      ),
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId("lvlTarget").setLabel("Target Level").setStyle(TextInputStyle.Short)
-      ),
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId("xpNow").setLabel("Start XP").setStyle(TextInputStyle.Short)
-      )
-    );
+      const modal = new ModalBuilder()
+        .setCustomId("calc")
+        .setTitle("XP Calculator");
 
-    await interaction.showModal(modal);
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder().setCustomId("lvlNow").setLabel("Start Level").setStyle(TextInputStyle.Short)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder().setCustomId("lvlTarget").setLabel("Target Level").setStyle(TextInputStyle.Short)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder().setCustomId("xpNow").setLabel("Start XP").setStyle(TextInputStyle.Short)
+        )
+      );
+
+      return interaction.showModal(modal);
+    }
+
+    // ===== OPEN =====
+    if (interaction.commandName === "open") {
+
+      client.user.setPresence({
+        activities: [{ name: "🟢 OPEN", type: 0 }],
+        status: "online"
+      });
+
+      const embed = new EmbedBuilder()
+        .setColor("Green")
+        .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
+        .setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`)
+        .addFields(
+          { name: "Status", value: "🟢 OPEN", inline: true },
+          { name: "Info", value: "Order sekarang sudah tersedia!", inline: true }
+        );
+
+      return interaction.reply({ embeds: [embed] });
+    }
+
+    // ===== CLOSED =====
+    if (interaction.commandName === "closed") {
+
+      client.user.setPresence({
+        activities: [{ name: "🔴 CLOSED", type: 0 }],
+        status: "dnd"
+      });
+
+      const embed = new EmbedBuilder()
+        .setColor("Red")
+        .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
+        .setDescription(`${CLOSEDSIGN} **SERVICE IS CURRENTLY CLOSED** ${CLOSEDSIGN}`)
+        .addFields(
+          { name: "Status", value: "🔴 CLOSED", inline: true },
+          { name: "Info", value: "Silakan tunggu sampai buka kembali.", inline: true }
+        );
+
+      return interaction.reply({ embeds: [embed] });
+    }
+
   }
 
+  // ===== MODAL SUBMIT =====
   if (interaction.isModalSubmit()) {
 
     const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
@@ -112,7 +179,6 @@ client.on("interactionCreate", async (interaction) => {
     if (neededXP > 0) neededXP += 1;
     if (neededXP < 0) neededXP = 0;
 
-    // ===== BUFF =====
     const base = 8;
     const coconut = 50;
     const dragon = 200;
@@ -120,7 +186,6 @@ client.on("interactionCreate", async (interaction) => {
     const pack1XP = base + coconut + dragon;
     const pack23XP = (base + coconut + dragon) * 1.2;
 
-    // ===== PACK =====
     const results = [
 
       (() => {
@@ -159,7 +224,7 @@ client.on("interactionCreate", async (interaction) => {
         { name: `Best Pack ${VERIFIED}`, value: `${best.name} (${formatCurrency(best.cost)})` }
       );
 
-    await interaction.reply({ embeds: [embed] });
+    return interaction.reply({ embeds: [embed] });
   }
 
 });
