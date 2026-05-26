@@ -1,22 +1,22 @@
 const {
-  Client,
-  GatewayIntentBits,
-  SlashCommandBuilder,
-  ActionRowBuilder,
-  EmbedBuilder,
-  REST,
-  Routes,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle
+Client,
+GatewayIntentBits,
+SlashCommandBuilder,
+ActionRowBuilder,
+EmbedBuilder,
+REST,
+Routes,
+ModalBuilder,
+TextInputBuilder,
+TextInputStyle
 } = require("discord.js");
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ]
+intents: [
+GatewayIntentBits.Guilds,
+GatewayIntentBits.GuildMessages,
+GatewayIntentBits.MessageContent
+]
 });
 
 // ===== GLOBAL =====
@@ -37,253 +37,246 @@ const CLOSEDSIGN = "<:CLOSEDSIGN:1508740634813665320>";
 
 // ===== FORMAT =====
 function formatCurrency(dlAmount) {
-  const bgl = Math.floor(dlAmount / 100);
-  const dl = dlAmount % 100;
+const bgl = Math.floor(dlAmount / 100);
+const dl = dlAmount % 100;
 
-  if (bgl > 0 && dl > 0) return `${bgl}${BGL} ${dl}${DL}`;
-  if (bgl > 0) return `${bgl}${BGL}`;
-  return `${dl}${DL}`;
+if (bgl > 0 && dl > 0) return `${bgl}${BGL} ${dl}${DL}`;
+if (bgl > 0) return `${bgl}${BGL}`;
+return `${dl}${DL}`;
 }
 
 // ===== XP TABLE =====
-const totalXP = { /* (TETEP SAMA, GW SINGKAT BIAR GA PANJANG) */ ... };
+const totalXP = {
+1:100,2:250,3:550,4:1100,5:2000,6:3350,7:5250,8:7800,9:11100,10:15250,
+11:20350,12:26500,13:33800,14:42350,15:52250,16:63600,17:76500,18:91050,19:107350,20:125500,
+21:145600,22:167750,23:192050,24:218600,25:247500,26:278850,27:312750,28:349300,29:388600,30:430750,
+31:475850,32:524000,33:575300,34:629850,35:687750,36:749100,37:814000,38:882550,39:954850,40:1031000,
+41:1111100,42:1195250,43:1283550,44:1376100,45:1473000,46:1574350,47:1680250,48:1790800,49:1906100,50:2026250,
+51:2151350,52:2281500,53:2416800,54:2557350,55:2703250,56:2854600,57:3011500,58:3174050,59:3342350,60:3516500,
+61:3696600,62:3882750,63:4075050,64:4273600,65:4478500,66:4689850,67:4907750,68:5132300,69:5363600,70:5601750,
+71:5846850,72:6099000,73:6358300,74:6624850,75:6898750,76:7180100,77:7469000,78:7765550,79:8069850,80:8382000,
+81:8702100,82:9030250,83:9366550,84:9711100,85:10064000,86:10425350,87:10795250,88:11173800,89:11561100,90:11957250,
+91:12362350,92:12776500,93:13199800,94:13632350,95:14074250,96:14525600,97:14986500,98:15457050,99:15937350,100:16427500,
+101:16927600,102:17437750,103:17958050,104:18488600,105:19029500,106:19580850,107:20142750,108:20715300,109:21298600,110:21892750,
+111:22497850,112:23114000,113:23741300,114:24379850,115:25029750,116:25691100,117:26364000,118:27048550,119:27744850,120:28453000,
+121:29173100,122:29905250,123:30649550,124:31406100,125:32175000
+};
 
 // ===== COMMAND =====
 const commands = [
-  new SlashCommandBuilder().setName("calculator").setDescription("XP Calculator"),
-  new SlashCommandBuilder().setName("open").setDescription("Set OPEN"),
-  new SlashCommandBuilder().setName("closed").setDescription("Set CLOSED"),
+new SlashCommandBuilder().setName("calculator").setDescription("XP Calculator"),
+new SlashCommandBuilder().setName("open").setDescription("Set OPEN"),
+new SlashCommandBuilder().setName("closed").setDescription("Set CLOSED"),
 
-  // TAMBAHAN
-  new SlashCommandBuilder()
-    .setName("testimonial")
-    .setDescription("Send testimonial (Owner only)")
+// ===== TAMBAHAN TESTI =====
+new SlashCommandBuilder()
+.setName("testi")
+.setDescription("Send testimonial (Owner only)")
+.addStringOption(option =>
+option.setName("level")
+.setDescription("Level (contoh: 10 → 50)")
+.setRequired(true))
+.addAttachmentOption(option =>
+option.setName("bukti")
+.setDescription("Screenshot bukti")
+.setRequired(true))
 ];
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
 (async () => {
-  await rest.put(
-    Routes.applicationGuildCommands("1507572125202911344", "1502085438674833558"),
-    { body: commands }
-  );
+await rest.put(
+Routes.applicationGuildCommands("1507572125202911344", "1502085438674833558"),
+{ body: commands }
+);
 })();
 
 // ===== READY =====
 client.on("ready", () => {
-  console.log(`Logged in as ${client.user.tag}`);
+console.log(`Logged in as ${client.user.tag}`);
 });
 
 // ===== OWNER CHECK =====
 async function isOwner(interaction) {
-  const guild = await interaction.guild.fetch();
-  return interaction.user.id === guild.ownerId;
+const guild = await interaction.guild.fetch();
+return interaction.user.id === guild.ownerId;
 }
 
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
 
-  if (interaction.isChatInputCommand()) {
+if (interaction.isChatInputCommand()) {
 
-    if (interaction.commandName === "calculator") {
-      const modal = new ModalBuilder()
-        .setCustomId("calc")
-        .setTitle("XP Calculator");
+// OWNER CHECK UPDATE
+if (["open", "closed", "testi"].includes(interaction.commandName)) {
+const owner = await isOwner(interaction);
+if (!owner) {
+return interaction.reply({ content: "❌ Only owner!", ephemeral: true });
+}
+}
 
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder().setCustomId("lvlNow").setLabel("Start Level").setStyle(TextInputStyle.Short)
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder().setCustomId("lvlTarget").setLabel("Target Level").setStyle(TextInputStyle.Short)
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder().setCustomId("xpNow").setLabel("Start XP").setStyle(TextInputStyle.Short)
-        )
-      );
+if (interaction.commandName === "calculator") {
+const modal = new ModalBuilder()
+.setCustomId("calc")
+.setTitle("XP Calculator");
 
-      return interaction.showModal(modal);
-    }
+modal.addComponents(
+new ActionRowBuilder().addComponents(
+new TextInputBuilder().setCustomId("lvlNow").setLabel("Start Level").setStyle(TextInputStyle.Short)
+),
+new ActionRowBuilder().addComponents(
+new TextInputBuilder().setCustomId("lvlTarget").setLabel("Target Level").setStyle(TextInputStyle.Short)
+),
+new ActionRowBuilder().addComponents(
+new TextInputBuilder().setCustomId("xpNow").setLabel("Start XP").setStyle(TextInputStyle.Short)
+)
+);
 
-    // UPDATE OWNER CHECK
-    if (["open", "closed", "testimonial"].includes(interaction.commandName)) {
-      const owner = await isOwner(interaction);
-      if (!owner) {
-        return interaction.reply({ content: "❌ Only owner!", ephemeral: true });
-      }
-    }
+return interaction.showModal(modal);
+}
 
-    // ===== TESTIMONIAL COMMAND =====
-    if (interaction.commandName === "testimonial") {
+// ===== TESTI COMMAND =====
+if (interaction.commandName === "testi") {
 
-      const modal = new ModalBuilder()
-        .setCustomId("testimonialModal")
-        .setTitle("Send Testimonial");
+const level = interaction.options.getString("level");
+const image = interaction.options.getAttachment("bukti");
 
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId("user")
-            .setLabel("User Name")
-            .setStyle(TextInputStyle.Short)
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId("level")
-            .setLabel("Level (contoh: 10 → 50)")
-            .setStyle(TextInputStyle.Short)
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId("message")
-            .setLabel("Testimonial Message")
-            .setStyle(TextInputStyle.Paragraph)
-        )
-      );
+const embed = new EmbedBuilder()
+.setColor("Gold")
+.setTitle("📢 TESTIMONIAL WOWLVL")
+.addFields(
+{ name: "Level", value: level },
+{ name: "Status", value: "✅ Order Completed" }
+)
+.setImage(image.url)
+.setFooter({ text: "Thank you for trusting WOWLVL!" });
 
-      return interaction.showModal(modal);
-    }
+return interaction.reply({ embeds: [embed] });
+}
 
-    // ===== OPEN =====
-    if (interaction.commandName === "open") {
-      client.user.setPresence({
-        activities: [{ name: "🟢 OPEN", type: 0 }],
-        status: "online"
-      });
+if (interaction.commandName === "open") {
 
-      const embed = new EmbedBuilder()
-        .setColor("Green")
-        .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-        .setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`)
-        .addFields(
-          { name: "Status", value: `${OPENSIGN} OPEN`, inline: true },
-          { name: "Info", value: "Order now!", inline: true }
-        );
+client.user.setPresence({
+activities: [{ name: "🟢 OPEN", type: 0 }],
+status: "online"
+});
 
-      if (lastStatusMessage) {
-        try { await lastStatusMessage.delete(); } catch {}
-      }
+const embed = new EmbedBuilder()
+.setColor("Green")
+.setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
+.setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`)
+.addFields(
+{ name: "Status", value: `${OPENSIGN} OPEN`, inline: true },
+{ name: "Info", value: "Order now!", inline: true }
+);
 
-      const msg = await interaction.reply({
-        content: "@everyone",
-        embeds: [embed],
-        allowedMentions: { parse: ["everyone"] },
-        fetchReply: true
-      });
+if (lastStatusMessage) {
+try { await lastStatusMessage.delete(); } catch {}
+}
 
-      lastStatusMessage = msg;
-    }
+const msg = await interaction.reply({
+content: "@everyone",
+embeds: [embed],
+allowedMentions: { parse: ["everyone"] },
+fetchReply: true
+});
 
-    // ===== CLOSED =====
-    if (interaction.commandName === "closed") {
-      client.user.setPresence({
-        activities: [{ name: "🔴 CLOSED", type: 0 }],
-        status: "dnd"
-      });
+lastStatusMessage = msg;
+}
 
-      const embed = new EmbedBuilder()
-        .setColor("Red")
-        .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-        .setDescription(`${CLOSEDSIGN} **SERVICE CLOSED** ${CLOSEDSIGN}`)
-        .addFields(
-          { name: "Status", value: `${CLOSEDSIGN} CLOSED`, inline: true },
-          { name: "Info", value: "Please wait until service open.", inline: true }
-        );
+if (interaction.commandName === "closed") {
 
-      if (lastStatusMessage) {
-        try { await lastStatusMessage.delete(); } catch {}
-      }
+client.user.setPresence({
+activities: [{ name: "🔴 CLOSED", type: 0 }],
+status: "dnd"
+});
 
-      const msg = await interaction.reply({
-        content: "@everyone",
-        embeds: [embed],
-        allowedMentions: { parse: ["everyone"] },
-        fetchReply: true
-      });
+const embed = new EmbedBuilder()
+.setColor("Red")
+.setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
+.setDescription(`${CLOSEDSIGN} **SERVICE CLOSED** ${CLOSEDSIGN}`)
+.addFields(
+{ name: "Status", value: `${CLOSEDSIGN} CLOSED`, inline: true },
+{ name: "Info", value: "Please wait until service open.", inline: true }
+);
 
-      lastStatusMessage = msg;
-    }
-  }
+if (lastStatusMessage) {
+try { await lastStatusMessage.delete(); } catch {}
+}
 
-  // ===== MODAL HANDLER =====
-  if (interaction.isModalSubmit()) {
+const msg = await interaction.reply({
+content: "@everyone",
+embeds: [embed],
+allowedMentions: { parse: ["everyone"] },
+fetchReply: true
+});
 
-    // TESTIMONIAL MODAL
-    if (interaction.customId === "testimonialModal") {
+lastStatusMessage = msg;
+}
+}
 
-      const user = interaction.fields.getTextInputValue("user");
-      const level = interaction.fields.getTextInputValue("level");
-      const message = interaction.fields.getTextInputValue("message");
+if (interaction.isModalSubmit()) {
 
-      const embed = new EmbedBuilder()
-        .setColor("Gold")
-        .setTitle("📢 TESTIMONIAL")
-        .addFields(
-          { name: "User", value: user },
-          { name: "Level", value: level },
-          { name: "Message", value: message }
-        );
+const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
+const target = parseInt(interaction.fields.getTextInputValue("lvlTarget"));
+const currentXP = parseInt(interaction.fields.getTextInputValue("xpNow"));
 
-      return interaction.reply({ embeds: [embed] });
-    }
+if (!totalXP[start] || !totalXP[target] || start >= target) {
+return interaction.reply({ content: "❌ Level tidak valid", ephemeral: true });
+}
 
-    // ===== CALCULATOR (TETEP) =====
-    const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
-    const target = parseInt(interaction.fields.getTextInputValue("lvlTarget"));
-    const currentXP = parseInt(interaction.fields.getTextInputValue("xpNow"));
+let neededXP = (totalXP[target] - totalXP[start]) - currentXP;
+neededXP = Math.round(neededXP);
+if (neededXP > 0) neededXP += 1;
+if (neededXP < 0) neededXP = 0;
 
-    if (!totalXP[start] || !totalXP[target] || start >= target) {
-      return interaction.reply({ content: "❌ Level tidak valid", ephemeral: true });
-    }
+const base = 8;
+const coconut = 50;
+const dragon = 200;
 
-    let neededXP = (totalXP[target] - totalXP[start]) - currentXP;
-    neededXP = Math.round(neededXP);
-    if (neededXP > 0) neededXP += 1;
-    if (neededXP < 0) neededXP = 0;
+const pack1XP = base + coconut + dragon;
+const pack23XP = (base + coconut + dragon) * 1.2;
 
-    const base = 8;
-    const coconut = 50;
-    const dragon = 200;
+const results = [
 
-    const pack1XP = base + coconut + dragon;
-    const pack23XP = (base + coconut + dragon) * 1.2;
+(() => {
+const ghosts = Math.floor(129000 / pack1XP);
+const total = ghosts * pack1XP;
+const amount = Math.ceil(neededXP / total);
+return { name: "Pack 1", amount, cost: amount * 20 };
+})(),
 
-    const results = [
-      (() => {
-        const ghosts = Math.floor(129000 / pack1XP);
-        const total = ghosts * pack1XP;
-        const amount = Math.ceil(neededXP / total);
-        return { name: "Pack 1", amount, cost: amount * 20 };
-      })(),
-      (() => {
-        const ghosts = Math.floor(619200 / pack23XP);
-        const total = ghosts * pack23XP;
-        const amount = Math.ceil(neededXP / total);
-        return { name: "Pack 2", amount, cost: amount * 40 };
-      })(),
-      (() => {
-        const ghosts = Math.floor(1238400 / pack23XP);
-        const total = ghosts * pack23XP;
-        const amount = Math.ceil(neededXP / total);
-        return { name: "Pack 3", amount, cost: amount * 75 };
-      })()
-    ];
+(() => {
+const ghosts = Math.floor(619200 / pack23XP);
+const total = ghosts * pack23XP;
+const amount = Math.ceil(neededXP / total);
+return { name: "Pack 2", amount, cost: amount * 40 };
+})(),
 
-    const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
+(() => {
+const ghosts = Math.floor(1238400 / pack23XP);
+const total = ghosts * pack23XP;
+const amount = Math.ceil(neededXP / total);
+return { name: "Pack 3", amount, cost: amount * 75 };
+})()
 
-    const embed = new EmbedBuilder()
-      .setTitle(`${LEFTWING} Need Level? Go WOWLVL ${RIGHTWING}`)
-      .addFields(
-        { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
-        { name: "Total XP", value: neededXP.toLocaleString() },
-        { name: `Pack ${PACK_1}`, value: `${results[0].amount}x (${formatCurrency(results[0].cost)})` },
-        { name: `Pack ${PACK_2}`, value: `${results[1].amount}x (${formatCurrency(results[1].cost)})` },
-        { name: `Pack ${PACK_3}`, value: `${results[2].amount}x (${formatCurrency(results[2].cost)})` },
-        { name: `Best Pack ${VERIFIED}`, value: `${best.name} (${formatCurrency(best.cost)})` }
-      );
+];
 
-    return interaction.reply({ embeds: [embed] });
-  }
+const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
+
+const embed = new EmbedBuilder()
+.setTitle(`${LEFTWING} Need Level? Go WOWLVL ${RIGHTWING}`)
+.addFields(
+{ name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
+{ name: "Total XP", value: neededXP.toLocaleString() },
+{ name: `Pack ${PACK_1}`, value: `${results[0].amount}x (${formatCurrency(results[0].cost)})` },
+{ name: `Pack ${PACK_2}`, value: `${results[1].amount}x (${formatCurrency(results[1].cost)})` },
+{ name: `Pack ${PACK_3}`, value: `${results[2].amount}x (${formatCurrency(results[2].cost)})` },
+{ name: `Best Pack ${VERIFIED}`, value: `${best.name} (${formatCurrency(best.cost)})` }
+);
+
+return interaction.reply({ embeds: [embed] });
+}
 
 });
 
