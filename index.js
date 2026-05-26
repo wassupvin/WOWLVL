@@ -8,8 +8,7 @@ const {
   Routes,
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle,
-  Events
+  TextInputStyle
 } = require("discord.js");
 
 const client = new Client({
@@ -36,7 +35,7 @@ const BGL = "<:BGL:1508256826385502228>";
 const OPENSIGN = "<:OPENSIGN:1508740529653940294>";
 const CLOSEDSIGN = "<:CLOSEDSIGN:1508740634813665320>";
 
-// ===== FORMAT DL → BGL =====
+// ===== FORMAT =====
 function formatCurrency(dlAmount) {
   const bgl = Math.floor(dlAmount / 100);
   const dl = dlAmount % 100;
@@ -79,9 +78,14 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
   );
 })();
 
-// ===== READY FIX =====
-client.once(Events.ClientReady, () => {
+// ===== READY =====
+client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
+
+  client.user.setPresence({
+    activities: [{ name: "🟢 OPEN", type: 0 }],
+    status: "online"
+  });
 });
 
 // ===== OWNER CHECK =====
@@ -95,9 +99,7 @@ client.on("interactionCreate", async (interaction) => {
 
   if (interaction.isChatInputCommand()) {
 
-    // ===== CALCULATOR (TIDAK DIUBAH) =====
     if (interaction.commandName === "calculator") {
-
       const modal = new ModalBuilder()
         .setCustomId("calc")
         .setTitle("XP Calculator");
@@ -117,75 +119,66 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.showModal(modal);
     }
 
-    // ===== OWNER CHECK =====
     if (["open", "closed"].includes(interaction.commandName)) {
-      if (!(await isOwner(interaction))) {
-        return interaction.reply({ content: "❌ Only owner!", flags: 64 });
+      const owner = await isOwner(interaction);
+      if (!owner) {
+        return interaction.reply({ content: "❌ Only owner!", ephemeral: true });
       }
     }
 
-    // ===== OPEN =====
     if (interaction.commandName === "open") {
 
       client.user.setPresence({
-        activities: [{ name: `${OPENSIGN} OPEN`, type: 0 }],
+        activities: [{ name: "🟢 OPEN", type: 0 }],
         status: "online"
       });
 
       const embed = new EmbedBuilder()
         .setColor("Green")
         .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-        .setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`)
-        .addFields(
-          { name: "Status", value: `${OPENSIGN} OPEN`, inline: true },
-          { name: "Info", value: "Order now!", inline: true }
-        );
+        .setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`);
 
       if (lastStatusMessage) {
         try { await lastStatusMessage.delete(); } catch {}
       }
 
-      await interaction.reply({
+      const msg = await interaction.reply({
         content: "@everyone",
         embeds: [embed],
-        allowedMentions: { parse: ["everyone"] }
+        allowedMentions: { parse: ["everyone"] },
+        fetchReply: true
       });
 
-      lastStatusMessage = await interaction.fetchReply();
+      lastStatusMessage = msg;
     }
 
-    // ===== CLOSED =====
     if (interaction.commandName === "closed") {
 
       client.user.setPresence({
-        activities: [{ name: `${CLOSEDSIGN} CLOSED`, type: 0 }],
+        activities: [{ name: "🔴 CLOSED", type: 0 }],
         status: "dnd"
       });
 
       const embed = new EmbedBuilder()
         .setColor("Red")
         .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-        .setDescription(`${CLOSEDSIGN} **SERVICE IS CLOSED** ${CLOSEDSIGN}`)
-        .addFields(
-          { name: "Status", value: `${CLOSEDSIGN} CLOSED`, inline: true },
-          { name: "Info", value: "Please wait...", inline: true }
-        );
+        .setDescription(`${CLOSEDSIGN} **SERVICE CLOSED** ${CLOSEDSIGN}`);
 
       if (lastStatusMessage) {
         try { await lastStatusMessage.delete(); } catch {}
       }
 
-      await interaction.reply({
+      const msg = await interaction.reply({
         content: "@everyone",
         embeds: [embed],
-        allowedMentions: { parse: ["everyone"] }
+        allowedMentions: { parse: ["everyone"] },
+        fetchReply: true
       });
 
-      lastStatusMessage = await interaction.fetchReply();
+      lastStatusMessage = msg;
     }
   }
 
-  // ===== MODAL (TIDAK DIUBAH) =====
   if (interaction.isModalSubmit()) {
 
     const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
@@ -193,7 +186,7 @@ client.on("interactionCreate", async (interaction) => {
     const currentXP = parseInt(interaction.fields.getTextInputValue("xpNow"));
 
     if (!totalXP[start] || !totalXP[target] || start >= target) {
-      return interaction.reply({ content: "❌ Level tidak valid", flags: 64 });
+      return interaction.reply({ content: "❌ Level tidak valid", ephemeral: true });
     }
 
     let neededXP = (totalXP[target] - totalXP[start]) - currentXP;
@@ -209,24 +202,28 @@ client.on("interactionCreate", async (interaction) => {
     const pack23XP = (base + coconut + dragon) * 1.2;
 
     const results = [
+
       (() => {
         const ghosts = Math.floor(129000 / pack1XP);
         const total = ghosts * pack1XP;
         const amount = Math.ceil(neededXP / total);
         return { name: "Pack 1", amount, cost: amount * 20 };
       })(),
+
       (() => {
         const ghosts = Math.floor(619200 / pack23XP);
         const total = ghosts * pack23XP;
         const amount = Math.ceil(neededXP / total);
         return { name: "Pack 2", amount, cost: amount * 40 };
       })(),
+
       (() => {
         const ghosts = Math.floor(1238400 / pack23XP);
         const total = ghosts * pack23XP;
         const amount = Math.ceil(neededXP / total);
         return { name: "Pack 3", amount, cost: amount * 75 };
       })()
+
     ];
 
     const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
