@@ -125,11 +125,10 @@ client.on("interactionCreate", async (interaction) => {
         .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
         .setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`)
         .addFields(
-          { name: "Status", value: "🟢 OPEN", inline: true },
+          { name: "Status", value: `${OPENSIGN} OPEN`, inline: true },
           { name: "Info", value: "Order now!", inline: true }
         );
 
-      // HAPUS PESAN LAMA
       if (lastStatusMessage) {
         try { await lastStatusMessage.delete(); } catch {}
       }
@@ -157,11 +156,10 @@ client.on("interactionCreate", async (interaction) => {
         .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
         .setDescription(`${CLOSEDSIGN} **SERVICE IS CURRENTLY CLOSED** ${CLOSEDSIGN}`)
         .addFields(
-          { name: "Status", value: "🔴 CLOSED", inline: true },
+          { name: "Status", value: `${CLOSEDSIGN} CLOSED`, inline: true },
           { name: "Info", value: "Please wait until service open.", inline: true }
         );
 
-      // HAPUS PESAN LAMA
       if (lastStatusMessage) {
         try { await lastStatusMessage.delete(); } catch {}
       }
