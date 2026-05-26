@@ -35,7 +35,7 @@ const BGL = "<:BGL:1508256826385502228>";
 const OPENSIGN = "<:OPENSIGN:1508740529653940294>";
 const CLOSEDSIGN = "<:CLOSEDSIGN:1508740634813665320>";
 
-// ===== FORMAT =====
+// ===== FORMAT DL → BGL =====
 function formatCurrency(dlAmount) {
   const bgl = Math.floor(dlAmount / 100);
   const dl = dlAmount % 100;
@@ -50,12 +50,21 @@ const totalXP = {
   1:100,2:250,3:550,4:1100,5:2000,6:3350,7:5250,8:7800,9:11100,10:15250,
   11:20350,12:26500,13:33800,14:42350,15:52250,16:63600,17:76500,18:91050,19:107350,20:125500,
   21:145600,22:167750,23:192050,24:218600,25:247500,26:278850,27:312750,28:349300,29:388600,30:430750,
-  31:475850,32:524000,33:575300,34:629850,35:687750,36:749100,37:814000,38:882550,39:954850,40:1031000
+  31:475850,32:524000,33:575300,34:629850,35:687750,36:749100,37:814000,38:882550,39:954850,40:1031000,
+  41:1111100,42:1195250,43:1283550,44:1376100,45:1473000,46:1574350,47:1680250,48:1790800,49:1906100,50:2026250,
+  51:2151350,52:2281500,53:2416800,54:2557350,55:2703250,56:2854600,57:3011500,58:3174050,59:3342350,60:3516500,
+  61:3696600,62:3882750,63:4075050,64:4273600,65:4478500,66:4689850,67:4907750,68:5132300,69:5363600,70:5601750,
+  71:5846850,72:6099000,73:6358300,74:6624850,75:6898750,76:7180100,77:7469000,78:7765550,79:8069850,80:8382000,
+  81:8702100,82:9030250,83:9366550,84:9711100,85:10064000,86:10425350,87:10795250,88:11173800,89:11561100,90:11957250,
+  91:12362350,92:12776500,93:13199800,94:13632350,95:14074250,96:14525600,97:14986500,98:15457050,99:15937350,100:16427500,
+  101:16927600,102:17437750,103:17958050,104:18488600,105:19029500,106:19580850,107:20142750,108:20715300,109:21298600,110:21892750,
+  111:22497850,112:23114000,113:23741300,114:24379850,115:25029750,116:25691100,117:26364000,118:27048550,119:27744850,120:28453000,
+  121:29173100,122:29905250,123:30649550,124:31406100,125:32175000
 };
 
 // ===== COMMAND =====
 const commands = [
-  new SlashCommandBuilder().setName("calculator").setDescription("XP Calculator"),
+  new SlashCommandBuilder().setName("calculator").setDescription("XP Calculator + Pack Recommendation"),
   new SlashCommandBuilder().setName("open").setDescription("Set OPEN"),
   new SlashCommandBuilder().setName("closed").setDescription("Set CLOSED")
 ];
@@ -74,11 +83,6 @@ async function isOwner(interaction) {
   const guild = await interaction.guild.fetch();
   return interaction.user.id === guild.ownerId;
 }
-
-// ===== READY =====
-client.on("ready", () => {
-  console.log(`Logged in as ${client.user.tag}`);
-});
 
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
@@ -109,10 +113,7 @@ client.on("interactionCreate", async (interaction) => {
     // ===== OWNER CHECK =====
     if (["open", "closed"].includes(interaction.commandName)) {
       if (!(await isOwner(interaction))) {
-        return interaction.reply({
-          content: "❌ Only server owner can use this command!",
-          ephemeral: true
-        });
+        return interaction.reply({ content: "❌ Only owner!", ephemeral: true });
       }
     }
 
@@ -122,7 +123,7 @@ client.on("interactionCreate", async (interaction) => {
       const isOpen = interaction.commandName === "open";
 
       client.user.setPresence({
-        activities: [{ name: isOpen ? "🟢 OPEN" : "🔴 CLOSED", type: 0 }],
+        activities: [{ name: isOpen ? "OPEN" : "CLOSED", type: 0 }],
         status: isOpen ? "online" : "dnd"
       });
 
@@ -154,7 +155,7 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  // ===== MODAL =====
+  // ===== MODAL SUBMIT =====
   if (interaction.isModalSubmit()) {
 
     const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
