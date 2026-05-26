@@ -81,11 +81,6 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 // ===== READY =====
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
-
-  client.user.setPresence({
-    activities: [{ name: "🟢 OPEN", type: 0 }],
-    status: "online"
-  });
 });
 
 // ===== OWNER CHECK =====
@@ -136,7 +131,11 @@ client.on("interactionCreate", async (interaction) => {
       const embed = new EmbedBuilder()
         .setColor("Green")
         .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-        .setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`);
+        .setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`)
+        .addFields(
+          { name: "Status", value: `${OPENSIGN} OPEN`, inline: true },
+          { name: "Info", value: "Order now!", inline: true }
+        );
 
       if (lastStatusMessage) {
         try { await lastStatusMessage.delete(); } catch {}
@@ -162,7 +161,11 @@ client.on("interactionCreate", async (interaction) => {
       const embed = new EmbedBuilder()
         .setColor("Red")
         .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-        .setDescription(`${CLOSEDSIGN} **SERVICE CLOSED** ${CLOSEDSIGN}`);
+        .setDescription(`${CLOSEDSIGN} **SERVICE CLOSED** ${CLOSEDSIGN}`)
+        .addFields(
+          { name: "Status", value: `${CLOSEDSIGN} CLOSED`, inline: true },
+          { name: "Info", value: "Please wait until service open.", inline: true }
+        );
 
       if (lastStatusMessage) {
         try { await lastStatusMessage.delete(); } catch {}
