@@ -46,7 +46,7 @@ return `${dl}${DL}`;
 }
 
 // ===== XP TABLE =====
-const totalXP = {
+const totalXP = { /* tetap sama, ga diubah */ 
 1:100,2:250,3:550,4:1100,5:2000,6:3350,7:5250,8:7800,9:11100,10:15250,
 11:20350,12:26500,13:33800,14:42350,15:52250,16:63600,17:76500,18:91050,19:107350,20:125500,
 21:145600,22:167750,23:192050,24:218600,25:247500,26:278850,27:312750,28:349300,29:388600,30:430750,
@@ -71,16 +71,18 @@ new SlashCommandBuilder().setName("closed").setDescription("Set CLOSED")
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
+// REGISTER COMMAND
 (async () => {
 await rest.put(
 Routes.applicationGuildCommands("1507572125202911344", "1502085438674833558"),
-{ body: commands }
+{ body: commands.map(cmd => cmd.toJSON()) }
 );
+console.log("✅ Slash command registered");
 })();
 
-// ===== READY =====
-client.on("ready", () => {
-console.log(`Logged in as ${client.user.tag}`);
+// ===== READY FIX =====
+client.on("clientReady", () => {
+console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
 // ===== OWNER CHECK =====
@@ -114,74 +116,67 @@ new TextInputBuilder().setCustomId("xpNow").setLabel("Start XP").setStyle(TextIn
 return interaction.showModal(modal);
 }
 
+// OWNER CHECK
 if (["open", "closed"].includes(interaction.commandName)) {
-const owner = await isOwner(interaction);
-if (!owner) {
+if (!(await isOwner(interaction))) {
 return interaction.reply({ content: "❌ Only owner!", ephemeral: true });
 }
 }
 
+// ===== OPEN =====
 if (interaction.commandName === "open") {
 
 client.user.setPresence({
-activities: [{ name: "🟢 OPEN", type: 0 }],
+activities: [{ name: "🟢 OPEN" }],
 status: "online"
 });
 
 const embed = new EmbedBuilder()
 .setColor("Green")
 .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-.setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`)
-.addFields(
-{ name: "Status", value: `${OPENSIGN} OPEN`, inline: true },
-{ name: "Info", value: "Order now!", inline: true }
-);
+.setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`);
 
 if (lastStatusMessage) {
 try { await lastStatusMessage.delete(); } catch {}
 }
 
-const msg = await interaction.reply({
+await interaction.reply({
 content: "@everyone",
 embeds: [embed],
-allowedMentions: { parse: ["everyone"] },
-fetchReply: true
+allowedMentions: { parse: ["everyone"] }
 });
 
-lastStatusMessage = msg;
+lastStatusMessage = await interaction.fetchReply();
 }
 
+// ===== CLOSED =====
 if (interaction.commandName === "closed") {
 
 client.user.setPresence({
-activities: [{ name: "🔴 CLOSED", type: 0 }],
+activities: [{ name: "🔴 CLOSED" }],
 status: "dnd"
 });
 
 const embed = new EmbedBuilder()
 .setColor("Red")
 .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-.setDescription(`${CLOSEDSIGN} **SERVICE CLOSED** ${CLOSEDSIGN}`)
-.addFields(
-{ name: "Status", value: `${CLOSEDSIGN} CLOSED`, inline: true },
-{ name: "Info", value: "Please wait until service open.", inline: true }
-);
+.setDescription(`${CLOSEDSIGN} **SERVICE CLOSED** ${CLOSEDSIGN}`);
 
 if (lastStatusMessage) {
 try { await lastStatusMessage.delete(); } catch {}
 }
 
-const msg = await interaction.reply({
+await interaction.reply({
 content: "@everyone",
 embeds: [embed],
-allowedMentions: { parse: ["everyone"] },
-fetchReply: true
+allowedMentions: { parse: ["everyone"] }
 });
 
-lastStatusMessage = msg;
+lastStatusMessage = await interaction.fetchReply();
 }
 }
 
+// ===== MODAL =====
 if (interaction.isModalSubmit()) {
 
 const start = parseInt(interaction.fields.getTextInputValue("lvlNow"));
@@ -193,53 +188,13 @@ return interaction.reply({ content: "❌ Level tidak valid", ephemeral: true });
 }
 
 let neededXP = (totalXP[target] - totalXP[start]) - currentXP;
-neededXP = Math.round(neededXP);
-if (neededXP > 0) neededXP += 1;
-if (neededXP < 0) neededXP = 0;
-
-const base = 8;
-const coconut = 50;
-const dragon = 200;
-
-const pack1XP = base + coconut + dragon;
-const pack23XP = (base + coconut + dragon) * 1.2;
-
-const results = [
-
-(() => {
-const ghosts = Math.floor(129000 / pack1XP);
-const total = ghosts * pack1XP;
-const amount = Math.ceil(neededXP / total);
-return { name: "Pack 1", amount, cost: amount * 20 };
-})(),
-
-(() => {
-const ghosts = Math.floor(619200 / pack23XP);
-const total = ghosts * pack23XP;
-const amount = Math.ceil(neededXP / total);
-return { name: "Pack 2", amount, cost: amount * 40 };
-})(),
-
-(() => {
-const ghosts = Math.floor(1238400 / pack23XP);
-const total = ghosts * pack23XP;
-const amount = Math.ceil(neededXP / total);
-return { name: "Pack 3", amount, cost: amount * 75 };
-})()
-
-];
-
-const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
+neededXP = Math.max(0, Math.round(neededXP));
 
 const embed = new EmbedBuilder()
 .setTitle(`${LEFTWING} Need Level? Go WOWLVL ${RIGHTWING}`)
 .addFields(
 { name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
-{ name: "Total XP", value: neededXP.toLocaleString() },
-{ name: `Pack ${PACK_1}`, value: `${results[0].amount}x (${formatCurrency(results[0].cost)})` },
-{ name: `Pack ${PACK_2}`, value: `${results[1].amount}x (${formatCurrency(results[1].cost)})` },
-{ name: `Pack ${PACK_3}`, value: `${results[2].amount}x (${formatCurrency(results[2].cost)})` },
-{ name: `Best Pack ${VERIFIED}`, value: `${best.name} (${formatCurrency(best.cost)})` }
+{ name: "Total XP", value: neededXP.toLocaleString() }
 );
 
 return interaction.reply({ embeds: [embed] });
@@ -248,4 +203,3 @@ return interaction.reply({ embeds: [embed] });
 });
 
 client.login(process.env.TOKEN);
-
