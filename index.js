@@ -69,7 +69,7 @@ new SlashCommandBuilder().setName("open").setDescription("Set OPEN"),
 new SlashCommandBuilder().setName("closed").setDescription("Set CLOSED")
 ].map(cmd => cmd.toJSON());
 
-// ===== REGISTER COMMAND =====
+// ===== REGISTER =====
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
 (async () => {
@@ -138,7 +138,15 @@ status: "online"
 const embed = new EmbedBuilder()
 .setColor("Green")
 .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-.setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`);
+.setDescription(`${OPENSIGN} **SERVICE IS NOW OPEN** ${OPENSIGN}`)
+.addFields(
+{ name: "Status", value: `${OPENSIGN} OPEN`, inline: true },
+{ name: "Info", value: "Order now!", inline: true }
+);
+
+if (lastStatusMessage) {
+try { await lastStatusMessage.delete(); } catch {}
+}
 
 const msg = await interaction.reply({
 content: "@everyone",
@@ -159,7 +167,15 @@ status: "dnd"
 const embed = new EmbedBuilder()
 .setColor("Red")
 .setTitle(`${LEFTWING} WOWLVL STATUS ${RIGHTWING}`)
-.setDescription(`${CLOSEDSIGN} **SERVICE CLOSED** ${CLOSEDSIGN}`);
+.setDescription(`${CLOSEDSIGN} **SERVICE CLOSED** ${CLOSEDSIGN}`)
+.addFields(
+{ name: "Status", value: `${CLOSEDSIGN} CLOSED`, inline: true },
+{ name: "Info", value: "Please wait until service open.", inline: true }
+);
+
+if (lastStatusMessage) {
+try { await lastStatusMessage.delete(); } catch {}
+}
 
 const msg = await interaction.reply({
 content: "@everyone",
@@ -183,13 +199,53 @@ return interaction.reply({ content: "❌ Level tidak valid", ephemeral: true });
 }
 
 let neededXP = (totalXP[target] - totalXP[start]) - currentXP;
+neededXP = Math.round(neededXP);
+if (neededXP > 0) neededXP += 1;
 if (neededXP < 0) neededXP = 0;
 
+const base = 8;
+const coconut = 50;
+const dragon = 200;
+
+const pack1XP = base + coconut + dragon;
+const pack23XP = (base + coconut + dragon) * 1.2;
+
+const results = [
+
+(() => {
+const ghosts = Math.floor(129000 / pack1XP);
+const total = ghosts * pack1XP;
+const amount = Math.ceil(neededXP / total);
+return { name: "Pack 1", amount, cost: amount * 20 };
+})(),
+
+(() => {
+const ghosts = Math.floor(619200 / pack23XP);
+const total = ghosts * pack23XP;
+const amount = Math.ceil(neededXP / total);
+return { name: "Pack 2", amount, cost: amount * 40 };
+})(),
+
+(() => {
+const ghosts = Math.floor(1238400 / pack23XP);
+const total = ghosts * pack23XP;
+const amount = Math.ceil(neededXP / total);
+return { name: "Pack 3", amount, cost: amount * 75 };
+})()
+
+];
+
+const best = results.reduce((a, b) => a.cost < b.cost ? a : b);
+
 const embed = new EmbedBuilder()
-.setTitle(`${LEFTWING} WOWLVL Calculator ${RIGHTWING}`)
+.setTitle(`${LEFTWING} Need Level? Go WOWLVL ${RIGHTWING}`)
 .addFields(
-{ name: "Level", value: `${start} → ${target}` },
-{ name: "XP Needed", value: neededXP.toLocaleString() }
+{ name: `${YELLOWSTAR} Level`, value: `${start} → ${target}` },
+{ name: "Total XP", value: neededXP.toLocaleString() },
+{ name: `Pack ${PACK_1}`, value: `${results[0].amount}x (${formatCurrency(results[0].cost)})` },
+{ name: `Pack ${PACK_2}`, value: `${results[1].amount}x (${formatCurrency(results[1].cost)})` },
+{ name: `Pack ${PACK_3}`, value: `${results[2].amount}x (${formatCurrency(results[2].cost)})` },
+{ name: `Best Pack ${VERIFIED}`, value: `${best.name} (${formatCurrency(best.cost)})` }
 );
 
 return interaction.reply({ embeds: [embed] });
