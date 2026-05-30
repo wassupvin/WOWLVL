@@ -10,7 +10,7 @@ ModalBuilder,
 TextInputBuilder,
 TextInputStyle
 } = require("discord.js");
-
+const fs = require("fs");
 const client = new Client({
 intents: [
 GatewayIntentBits.Guilds,
@@ -21,6 +21,34 @@ GatewayIntentBits.MessageContent
 
 // ===== GLOBAL =====
 let lastStatusMessage = null;
+function getPrices() {
+
+  if (!fs.existsSync("./prices.json")) {
+
+    fs.writeFileSync(
+      "./prices.json",
+      JSON.stringify({
+        pack1: 15,
+        pack2: 35,
+        pack3: 65
+      }, null, 2)
+    );
+
+  }
+
+  return JSON.parse(
+    fs.readFileSync("./prices.json", "utf8")
+  );
+}
+
+function savePrices(data) {
+
+  fs.writeFileSync(
+    "./prices.json",
+    JSON.stringify(data, null, 2)
+  );
+
+}
 
 // ===== EMOJI =====
 const DL = "<:DL:1508062516067045478>";
@@ -215,7 +243,7 @@ embeds: [embed],
 allowedMentions: { parse: ["everyone"] }
 });
 
-lastStatusMessage = msg;
+Message = msg;
 }
 }
 
