@@ -286,3 +286,275 @@ return interaction.reply({ embeds: [embed] });
 });
 
 client.login(process.env.TOKEN);
+
+const {
+Client,
+GatewayIntentBits,
+SlashCommandBuilder,
+EmbedBuilder,
+REST,
+Routes
+} = require("discord.js");
+
+const fs = require("fs");
+
+// ================= CONFIG =================
+const TOKEN = process.env.TOKEN;
+
+// GANTI INI
+const CLIENT_ID = "1507572125202911344";
+const GUILD_ID = "1502085438674833558";
+
+// ================= PRICE FILE =================
+const PRICE_FILE = "./prices.json";
+
+// Buat file otomatis kalau belum ada
+if (!fs.existsSync(PRICE_FILE)) {
+fs.writeFileSync(
+PRICE_FILE,
+JSON.stringify(
+{
+pack1: 15,
+pack2: 35,
+pack3: 65
+},
+null,
+2
+)
+);
+}
+
+// Load harga
+let prices = JSON.parse(
+fs.readFileSync(PRICE_FILE, "utf8")
+);
+
+// Simpan harga
+function savePrices() {
+fs.writeFileSync(
+PRICE_FILE,
+JSON.stringify(prices, null, 2)
+);
+}
+
+// ================= CLIENT =================
+const client = new Client({
+intents: [GatewayIntentBits.Guilds]
+});
+
+// ================= COMMANDS =================
+const commands = [
+
+new SlashCommandBuilder()
+.setName("price")
+.setDescription("Show current pack prices"),
+
+new SlashCommandBuilder()
+.setName("setpack1")
+.setDescription("Set Pack 1 price")
+.addIntegerOption(option =>
+option
+.setName("price")
+.setDescription("New price")
+.setRequired(true)
+),
+
+new SlashCommandBuilder()
+.setName("setpack2")
+.setDescription("Set Pack 2 price")
+.addIntegerOption(option =>
+option
+.setName("price")
+.setDescription("New price")
+.setRequired(true)
+),
+
+new SlashCommandBuilder()
+.setName("setpack3")
+.setDescription("Set Pack 3 price")
+.addIntegerOption(option =>
+option
+.setName("price")
+.setDescription("New price")
+.setRequired(true)
+)
+
+].map(cmd => cmd.toJSON());
+
+// ================= REGISTER COMMAND =================
+const rest = new REST({
+version: "10"
+}).setToken(TOKEN);
+
+(async () => {
+try {
+
+```
+console.log("Registering commands...");
+
+await rest.put(
+  Routes.applicationGuildCommands(
+    CLIENT_ID,
+    GUILD_ID
+  ),
+  {
+    body: commands
+  }
+);
+
+console.log("Commands registered!");
+```
+
+} catch (err) {
+console.error(err);
+}
+})();
+
+// ================= READY =================
+client.on("ready", () => {
+console.log(
+`Logged in as ${client.user.tag}`
+);
+});
+
+// ================= OWNER CHECK =================
+async function isOwner(interaction) {
+const guild = await interaction.guild.fetch();
+return interaction.user.id === guild.ownerId;
+}
+
+// ================= INTERACTION =================
+client.on(
+"interactionCreate",
+async interaction => {
+
+```
+if (!interaction.isChatInputCommand())
+  return;
+
+// ================= PRICE =================
+if (
+  interaction.commandName === "price"
+) {
+
+  const embed = new EmbedBuilder()
+    .setColor("#00ff88")
+    .setTitle("💰 WOWLVL LIVE PRICE")
+    .setDescription(
+      "Current Service Prices"
+    )
+    .addFields(
+      {
+        name: "📦 Pack 1",
+        value: `${prices.pack1} DL`,
+        inline: true
+      },
+      {
+        name: "📦 Pack 2",
+        value: `${prices.pack2} DL`,
+        inline: true
+      },
+      {
+        name: "📦 Pack 3",
+        value: `${prices.pack3} DL`,
+        inline: true
+      }
+    )
+    .setFooter({
+      text: "WOWLVL Service"
+    })
+    .setTimestamp();
+
+  return interaction.reply({
+    embeds: [embed]
+  });
+}
+
+// ================= OWNER COMMANDS =================
+if (
+  interaction.commandName ===
+    "setpack1" ||
+  interaction.commandName ===
+    "setpack2" ||
+  interaction.commandName ===
+    "setpack3"
+) {
+
+  const owner =
+    await isOwner(interaction);
+
+  if (!owner) {
+    return interaction.reply({
+      content:
+        "❌ Only Server Owner can use this command.",
+      ephemeral: true
+    });
+  }
+
+  const newPrice =
+    interaction.options.getInteger(
+      "price"
+    );
+
+  if (
+    interaction.commandName ===
+    "setpack1"
+  ) {
+    prices.pack1 = newPrice;
+  }
+
+  if (
+    interaction.commandName ===
+    "setpack2"
+  ) {
+    prices.pack2 = newPrice;
+  }
+
+  if (
+    interaction.commandName ===
+    "setpack3"
+  ) {
+    prices.pack3 = newPrice;
+  }
+
+  savePrices();
+
+  const embed =
+    new EmbedBuilder()
+      .setColor("#00ff88")
+      .setTitle(
+        "✅ Price Updated"
+      )
+      .setDescription(
+        "New price has been saved."
+      )
+      .addFields(
+        {
+          name: "📦 Pack 1",
+          value: `${prices.pack1} DL`,
+          inline: true
+        },
+        {
+          name: "📦 Pack 2",
+          value: `${prices.pack2} DL`,
+          inline: true
+        },
+        {
+          name: "📦 Pack 3",
+          value: `${prices.pack3} DL`,
+          inline: true
+        }
+      )
+      .setTimestamp();
+
+  return interaction.reply({
+    embeds: [embed]
+  });
+}
+```
+
+}
+);
+
+// ================= LOGIN =================
+client.login(TOKEN);
