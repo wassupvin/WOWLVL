@@ -65,6 +65,7 @@ const totalXP = {
 // ===== COMMAND =====
 const commands = [
 new SlashCommandBuilder().setName("calculator").setDescription("XP Calculator"),
+new SlashCommandBuilder().setName("price").setDescription("Show WOWLVL Pack Prices"),
 new SlashCommandBuilder().setName("open").setDescription("Set OPEN"),
 new SlashCommandBuilder().setName("closed").setDescription("Set CLOSED")
 ].map(cmd => cmd.toJSON());
@@ -98,6 +99,37 @@ return interaction.user.id === guild.ownerId;
 
 // ===== INTERACTION =====
 client.on("interactionCreate", async (interaction) => {
+  if (interaction.commandName === "price") {
+
+const embed = new EmbedBuilder()
+.setColor("Gold")
+.setTitle(`${LEFTWING} WOWLVL PRICE LIST ${RIGHTWING}`)
+.setDescription("Current pack prices")
+.addFields(
+{
+name: `${PACK_1} Pack 1`,
+value: `15 ${DL}`,
+inline: true
+},
+{
+name: `${PACK_2} Pack 2`,
+value: `35 ${DL}`,
+inline: true
+},
+{
+name: `${PACK_3} Pack 3`,
+value: `65 ${DL}`,
+inline: true
+}
+)
+.setFooter({
+text: "WOWLVL Service"
+});
+
+return interaction.reply({
+embeds: [embed]
+});
+}
 
 if (interaction.isChatInputCommand()) {
 
